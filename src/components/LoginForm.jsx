@@ -7,28 +7,28 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import axios from 'axios';
+import { useNavigate } from 'react-router';
 
 // 1. Validation Schema
 const schema = yup.object({
   email: yup.string()
     .email('Invalid email format')
-    .matches(/^[a-zA-Z0-9]+@bharatrohan\.in$/, 'Only alphanumeric & @bharatrohan.in emails are allowed')
     .required('Email is required'),
   password: yup.string()
-    .max(10, 'Password must be at most 10 characters')
+    .max(15, 'Password must be at most 15 characters')
     .min(6, 'Password must be at least 6 characters')
     .required('Password is required'),
 }).required();
 
 // 2. Dummy API Configuration
-const API_URL = 'https://crudcrud.com/api/30390c9aa9554f0fa20206bf32640541/login_attempts';
+const API_URL = 'http://192.168.0.160:3000/auth/login';
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
   const [success, setSuccess] = useState(false);
-
+  const navigate = useNavigate();
   // 3. Form Hook Setup
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema)
@@ -48,10 +48,14 @@ const LoginForm = () => {
         timestamp: new Date()
       });
 
-      if (response.status === 201) {
+      if (response.data.token) {
+
+        localStorage.setItem('authToken', response.data.token);
+
         setSuccess(true);
         console.log('Login Successful:', response.data);
         // Redirect user or save token here
+        navigate('/sidebar');
       }
     } catch (error) {
       setServerError('Invalid credentials or API error. Please try again.');
