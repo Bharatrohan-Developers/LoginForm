@@ -27,7 +27,9 @@ const ProjectCard = ({ project }) => {
         <Button size="small"
           color="secondary"
           variant='contained'
-          onClick={() => navigate(`/farmers/${project._id}`)}
+          onClick={() => navigate(`/farmers/${project._id}`, {
+            state: { surveyCount: project.surveyCount }
+          })}
         >View Details</Button>
       </CardActions>
     </Card>

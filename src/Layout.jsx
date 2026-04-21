@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router';
+import { useNavigate, Outlet } from 'react-router';
 import {
     AppBar,
     Toolbar,
@@ -52,7 +52,7 @@ const Sidebar = () => {
             <CssBaseline />
 
             {/* HEADER */}
-            <AppBar position="sticky" elevation={1} sx={{ backgroundColor: 'white', color: 'black' }}>
+            <AppBar position="sticky" elevation={2} sx={{ backgroundColor: 'white', color: 'black' }}>
                 <Container maxWidth="lg">
                     <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
                         {/* Logo Section */}
@@ -81,54 +81,11 @@ const Sidebar = () => {
             </AppBar>
 
             {/* BODY / CONTENT */}
-            <Box component="main" sx={{ py: 6, minHeight: '80vh' }}>
-                <Container maxWidth="lg">
-                    <Box mb={4}>
-                        <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-                            My Projects
-                        </Typography>
-                    </Box>
-
-                    <Grid container spacing={4}>
-                        {projects.map((project) => (
-                            <Grid item="true" key={project._id} xs={12} sm={6} md={4}>
-                                <ProjectCard project={project} />
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Container>
+            <Box component="main" sx={{ py: 2, minHeight: '80vh'}}>
+                <Outlet />
             </Box>
 
             {/* FOOTER */}
-            <Box component="footer" sx={{ py: 6, px: 2, mt: 'auto', backgroundColor: '#fff', borderTop: '1px solid #e0e0e0' }}>
-                <Container maxWidth="lg">
-                    <Grid container spacing={4} sx={{ justifyContent: 'space-between' }}>
-                        <Grid item="true" xs={12} sm={6}>
-                            <Typography variant="h6" color="text.primary" gutterBottom>
-                                About This Dashboard
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Built with React and Material UI. This dashboard showcases responsive design
-                                and modular component architecture.
-                            </Typography>
-                        </Grid>
-                        <Grid item="true" xs={12} sm={3}>
-                            <Typography variant="h6" color="text.primary" gutterBottom>
-                                Contact
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Email: hello@example.com
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Github: @yourusername
-                            </Typography>
-                        </Grid>
-                    </Grid>
-                    <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 5 }}>
-                        {'Copyright © '} {new Date().getFullYear()} BharatRohan.
-                    </Typography>
-                </Container>
-            </Box>
         </ThemeProvider>
     );
 };
