@@ -33,7 +33,7 @@ const Sidebar = () => {
         if (!token) {
             navigate('/');
         } else {
-            axios.get('http://192.168.0.160:3000/projects', {
+            axios.get(`${import.meta.env.VITE_URL}/projects`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

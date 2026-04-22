@@ -27,10 +27,10 @@ const ProjectCard = ({ project }) => {
         <Button size="small"
           color="secondary"
           variant='contained'
-          onClick={() => navigate(`/farmers/${project._id}`, {
+          onClick={() => navigate(`/projects/${project._id}`, {
             state: { surveyCount: project.surveyCount }
           })}
-        >View Details</Button>
+        >Farmers</Button>
       </CardActions>
     </Card>
   );

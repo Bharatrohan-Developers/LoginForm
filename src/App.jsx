@@ -4,7 +4,7 @@ import ProjectList from './components/ProjectList'; // Renamed Sidebar to Projec
 import FarmerDetails from './components/FarmerDetails';
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./Layout";
-
+import CreateProject from './projects/CreateProject';
 
 
 function App() {
@@ -16,8 +16,9 @@ function App() {
 
         {/* Protected Routes with Constant Header/Footer */}
         <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route path="/sidebar" element={<ProjectList />} />
-          <Route path="/farmers/:_id" element={<FarmerDetails />} />
+          <Route path="/dashboard" element={<ProjectList />} />
+          <Route path="/projects/:_id" element={<FarmerDetails />} />
+          <Route path="/projects/create" element={<CreateProject />} />
         </Route>
       </Routes>
     </BrowserRouter>

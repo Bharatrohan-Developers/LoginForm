@@ -20,8 +20,7 @@ const schema = yup.object({
     .required('Password is required'),
 }).required();
 
-// 2. Dummy API Configuration
-const API_URL = 'http://192.168.0.160:3000/auth/login';
+
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -40,9 +39,7 @@ const LoginForm = () => {
     setLoading(true);
     setServerError('');
     try {
-      // Note: CrudCrud is a REST API. In a real app, you'd use a /login endpoint.
-      // Here we "POST" the login attempt to simulate a request.
-      const response = await axios.post(API_URL, {
+      const response = await axios.post(`${import.meta.env.VITE_URL}/auth/login`, {
         email: data.email,
         password: data.password, // In production, never send passwords in plain text!
         timestamp: new Date()
@@ -51,11 +48,12 @@ const LoginForm = () => {
       if (response.data.token) {
 
         localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('role', response.data.user.role);
 
         setSuccess(true);
         console.log('Login Successful:', response.data);
         // Redirect user or save token here
-        navigate('/sidebar');
+        navigate('/dashboard');
       }
     } catch (error) {
       setServerError('Invalid credentials or API error. Please try again.');
