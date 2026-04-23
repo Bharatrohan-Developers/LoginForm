@@ -5,6 +5,8 @@ import FarmerDetails from './components/FarmerDetails';
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./Layout";
 import CreateProject from './projects/CreateProject';
+import AssignUsers from './projects/AssignUsers';
+import ShowAgronomist from './projects/ShowAgronomist';
 
 
 function App() {
@@ -16,9 +18,11 @@ function App() {
 
         {/* Protected Routes with Constant Header/Footer */}
         <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route path="/dashboard" element={<ProjectList />} />
-          <Route path="/projects/:_id" element={<FarmerDetails />} />
-          <Route path="/projects/create" element={<CreateProject />} />
+          <Route path="/dashboard" element={<ProtectedRoute><ProjectList /></ProtectedRoute>} />
+          <Route path="/projects/:_id" element={<ProtectedRoute><FarmerDetails /></ProtectedRoute>} />
+          <Route path="/projects/create" element={<ProtectedRoute><CreateProject /></ProtectedRoute>} />
+          <Route path="/projects/assign/:id" element={<ProtectedRoute><AssignUsers /></ProtectedRoute>} />
+          <Route path="/projects/agronomist/:id" element={<ProtectedRoute><ShowAgronomist /></ProtectedRoute>} />
         </Route>
       </Routes>
     </BrowserRouter>

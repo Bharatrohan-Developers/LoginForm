@@ -58,7 +58,7 @@ const CreateProject = () => {
 
             if (response.status === 201 || response.status === 200) {
                 // Redirect back to project list on success
-                navigate('/projects');
+                navigate(`/projects/assign/${response.data.data._id}`);
             }
         } catch (err) {
             console.error('Error creating project:', err);
@@ -78,7 +78,7 @@ const CreateProject = () => {
                 <Link 
                     underline="hover" 
                     color="inherit" 
-                    onClick={() => navigate('/projects')} 
+                    onClick={() => navigate('/dashboard')} 
                     sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                 >
                     <ArrowBackIcon sx={{ mr: 0.5, fontSize: 'inherit' }} /> My Projects

@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useNavigate, Outlet } from 'react-router';
+import { Outlet } from 'react-router';
 import {
     AppBar,
     Toolbar,
@@ -14,7 +12,6 @@ import {
     ThemeProvider,
     createTheme
 } from '@mui/material';
-import ProjectCard from './components/ProjectCard';
 
 // Create a custom theme
 const theme = createTheme({
@@ -24,29 +21,11 @@ const theme = createTheme({
     },
 });
 
-const Sidebar = () => {
+const Layout = () => {
     const token = localStorage.getItem('authToken');
-    const [projects, setProjects] = useState([]);
-    const navigate = useNavigate();
+    const role = localStorage.getItem('role');
 
-    useEffect(() => {
-        if (!token) {
-            navigate('/');
-        } else {
-            axios.get(`${import.meta.env.VITE_URL}/projects`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            })
-                .then(response => {
-                    // Access the "data" array inside the response object
-                    setProjects(response.data.data);
-                })
-                .catch(error => {
-                    console.error('Error fetching projects:', error);
-                });
-        }
-    }, [token, navigate]);
+
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
@@ -70,7 +49,7 @@ const Sidebar = () => {
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>
-                                Welcome, Admin!
+                                Welcome, {role}!
                             </Typography>
                             <IconButton sx={{ p: 0 }}>
                                 <Avatar alt="User Profile" src="https://mui.com/static/images/avatar/1.jpg" />
@@ -81,7 +60,7 @@ const Sidebar = () => {
             </AppBar>
 
             {/* BODY / CONTENT */}
-            <Box component="main" sx={{ py: 2, minHeight: '80vh'}}>
+            <Box component="main" sx={{ py: 2, minHeight: '80vh' }}>
                 <Outlet />
             </Box>
 
@@ -90,4 +69,4 @@ const Sidebar = () => {
     );
 };
 
-export default Sidebar;
+export default Layout;

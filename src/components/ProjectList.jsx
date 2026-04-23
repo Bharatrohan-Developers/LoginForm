@@ -103,7 +103,7 @@ const ProjectList = () => {
                 ) : error ? (
                     <Alert severity="error">{error}</Alert>
                 ) : (
-                    <Grid container spacing={4} sx={{display:"flex",justifyContent:"center", alignItems:"center"}}>
+                    <Grid container spacing={4} sx={{display:"grid",justifyContent:"center",gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)'}}>
                         {projects.length > 0 ? (
                             projects.map((project) => (
                                 <Grid item key={project._id} xs={12} sm={6} md={4}>
