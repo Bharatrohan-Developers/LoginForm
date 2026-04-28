@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router';
 import LoginForm from './components/LoginForm';
-import ProjectList from './components/ProjectList'; // Renamed Sidebar to ProjectList
+import ProjectList from './components/ProjectList';
 import FarmerDetails from './components/FarmerDetails';
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./Layout";

@@ -29,7 +29,7 @@ import { useNavigate, useParams } from 'react-router';
 
 export default function AssignUsers() {
     const navigate = useNavigate();
-    const projectId = useParams().id; // Assuming route is like /projects/assign/:id
+    const projectId = useParams().id;
 
     const [members, setMembers] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
@@ -45,7 +45,6 @@ export default function AssignUsers() {
         const fetchUsers = async () => {
             setLoading(true);
             try {
-                // Replace 'url/users' with your actual environment variable or full URL
                 const response = await axios.get(`${import.meta.env.VITE_URL}/users`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('authToken')}`
@@ -87,8 +86,6 @@ export default function AssignUsers() {
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            // Example POST/PUT request to save assignments
-            // await axios.post('url/projects/assign', { userIds: selectedIds });
             const response = await axios.patch(
                 `${import.meta.env.VITE_URL}/projects/${projectId}/users`,
                 {

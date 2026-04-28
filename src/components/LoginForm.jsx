@@ -35,7 +35,6 @@ const LoginForm = () => {
 
   // 4. Submit Handler
   const onSubmit = async (data) => {
-    console.log('Form Data:', data.email, data.password);// Debugging: Log form data to verify correct capture
     setLoading(true);
     setServerError('');
     try {
