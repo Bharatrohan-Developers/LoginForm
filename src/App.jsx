@@ -7,7 +7,9 @@ import Layout from "./Layout";
 import CreateProject from './projects/CreateProject';
 import AssignUsers from './projects/AssignUsers';
 import ShowAgronomist from './projects/ShowAgronomist';
-
+// admin import
+import AdminDashboard from './Admin/AdminDashboard';
+import UserList from './Admin/UserList';
 
 function App() {
   return (
@@ -15,6 +17,11 @@ function App() {
       <Routes>
         {/* Public Route */}
         <Route path="/" element={<LoginForm />} />
+        <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
+          {/* Admin-specific routes can be nested here */}
+          <Route path='/admin/users' element={<ProtectedRoute><UserList /></ProtectedRoute>} />
+          <Route path="dashboard" element={<ProtectedRoute><ProjectList /></ProtectedRoute>} />
+        </Route>
 
         {/* Protected Routes with Constant Header/Footer */}
         <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>

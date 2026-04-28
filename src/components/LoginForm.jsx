@@ -52,7 +52,11 @@ const LoginForm = () => {
         setSuccess(true);
         console.log('Login Successful:', response.data);
         // Redirect user or save token here
-        navigate('/dashboard');
+        if (response.data.user.role === 'Admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
       }
     } catch (error) {
       setServerError('Invalid credentials or API error. Please try again.');
