@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -38,7 +38,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const role = localStorage.getItem('role') || 'Admin';
-  
+
   // Responsive Breakpoint check
   const isMobile = useMediaQuery('(max-width:900px)');
 
@@ -173,9 +173,9 @@ const AdminDashboard = () => {
                 <Typography variant="caption" color="text.secondary">Admin Panel</Typography>
               </Box>
               <IconButton onClick={handleMenuOpen} sx={{ p: 0.5 }}>
-                <Avatar 
-                  src="https://mui.com/static/images/avatar/1.jpg" 
-                  sx={{ width: { xs: 32, sm: 36 }, height: { xs: 32, sm: 36 }, border: '2px solid #007a33' }} 
+                <Avatar
+                  src="https://mui.com/static/images/avatar/1.jpg"
+                  sx={{ width: { xs: 32, sm: 36 }, height: { xs: 32, sm: 36 }, border: '2px solid #007a33' }}
                 />
               </IconButton>
             </Box>
@@ -183,10 +183,10 @@ const AdminDashboard = () => {
         </AppBar>
 
         {/* NAVIGATION DRAWER */}
-        <Box 
-          component="nav" 
-          sx={{ 
-            width: { md: drawerWidth }, 
+        <Box
+          component="nav"
+          sx={{
+            width: { md: drawerWidth },
             flexShrink: { md: 0 },
             transition: (theme) => theme.transitions.create('width', {
               easing: theme.transitions.easing.sharp,
@@ -235,9 +235,9 @@ const AdminDashboard = () => {
           sx={{
             flexGrow: 1,
             p: { xs: 2, sm: 3 },
-            width: { 
-                xs: '100%', 
-                md: `calc(100% - ${drawerWidth}px)` 
+            width: {
+              xs: '100%',
+              md: `calc(100% - ${drawerWidth}px)`
             },
             transition: (theme) => theme.transitions.create(['width', 'margin'], {
               easing: theme.transitions.easing.sharp,
@@ -252,10 +252,10 @@ const AdminDashboard = () => {
         </Box>
 
         {/* User Profile Menu */}
-        <Menu 
-          anchorEl={anchorEl} 
-          open={Boolean(anchorEl)} 
-          onClose={handleMenuClose} 
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
           sx={{ mt: 1 }}
           transformOrigin={{ horizontal: 'right', vertical: 'top' }}
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}

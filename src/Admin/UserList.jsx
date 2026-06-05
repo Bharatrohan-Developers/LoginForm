@@ -122,10 +122,10 @@ const UserList = () => {
                 </Typography>
             )
         },
-        { 
-            field: 'email', 
-            headerName: 'Email', 
-            flex: 1.5, 
+        {
+            field: 'email',
+            headerName: 'Email',
+            flex: 1.5,
             minWidth: 200,
             // Automatically hide email on very small screens via the columnVisibilityModel below
         },
@@ -175,31 +175,31 @@ const UserList = () => {
 
     return (
         <Box sx={{ width: '100%', overflow: 'hidden' }}>
-            <Paper 
-                elevation={0} 
-                sx={{ 
-                    p: { xs: 2, md: 3 }, 
+            <Paper
+                elevation={0}
+                sx={{
+                    p: { xs: 2, md: 3 },
                     borderRadius: { xs: 0, sm: 2 },
-                    border: '1px solid #eee' 
+                    border: '1px solid #eee'
                 }}
             >
                 {/* Header Section - Responsive Stack */}
-                <Stack 
+                <Stack
                     direction={{ xs: 'row', sm: 'row' }}
-                    sx={{ mb: 3, justifyContent:"space-between",alignItems:"center",spacing:2 }}
+                    sx={{ mb: 3, justifyContent: "space-between", alignItems: "center", spacing: 2 }}
                 >
-                    <Typography 
-                        variant={isMobile ? "h5" : "h4"} 
+                    <Typography
+                        variant={isMobile ? "h5" : "h4"}
                         sx={{ fontWeight: 800, color: 'text.primary' }}
                     >
                         Users
                     </Typography>
-                    
+
                     <Button
                         variant="contained"
                         startIcon={<PersonAddIcon />}
                         onClick={() => setAddUserOpen(true)}
-                        sx={{ 
+                        sx={{
                             borderRadius: '8px',
                             textTransform: 'none',
                             px: { xs: 2, sm: 3 }
@@ -212,8 +212,8 @@ const UserList = () => {
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
                 {/* DataGrid Container */}
-                <Box sx={{ 
-                    height: 650, 
+                <Box sx={{
+                    height: 650,
                     width: '100%',
                     '& .MuiDataGrid-root': {
                         border: 'none',
@@ -233,7 +233,7 @@ const UserList = () => {
                             // Hide Email column on mobile automatically
                             columns: {
                                 columnVisibilityModel: {
-                                    email: !isMobile, 
+                                    email: !isMobile,
                                 },
                             },
                         }}
@@ -252,11 +252,11 @@ const UserList = () => {
             </Paper>
 
             {/* Add User Dialog - FullScreen on Mobile */}
-            <Dialog 
-                open={addUserOpen} 
-                onClose={() => setAddUserOpen(false)} 
+            <Dialog
+                open={addUserOpen}
+                onClose={() => setAddUserOpen(false)}
                 fullScreen={isMobile}
-                fullWidth 
+                fullWidth
                 maxWidth="xs"
             >
                 <form onSubmit={handleAddUserSubmit} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

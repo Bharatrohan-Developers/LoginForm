@@ -19,17 +19,17 @@ function App() {
         <Route path="/" element={<LoginForm />} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
           {/* Admin-specific routes can be nested here */}
-          <Route path='/admin/users' element={<ProtectedRoute><UserList /></ProtectedRoute>} />
-          <Route path="dashboard" element={<ProtectedRoute><ProjectList /></ProtectedRoute>} />
+          <Route path="users" element={<UserList />} />
+          <Route path="dashboard" element={<ProjectList />} />
         </Route>
 
         {/* Protected Routes with Constant Header/Footer */}
         <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route path="/dashboard" element={<ProtectedRoute><ProjectList /></ProtectedRoute>} />
-          <Route path="/projects/:_id" element={<ProtectedRoute><FarmerDetails /></ProtectedRoute>} />
-          <Route path="/projects/create" element={<ProtectedRoute><CreateProject /></ProtectedRoute>} />
-          <Route path="/projects/assign/:id" element={<ProtectedRoute><AssignUsers /></ProtectedRoute>} />
-          <Route path="/projects/agronomist/:id" element={<ProtectedRoute><ShowAgronomist /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProjectList />} />
+          <Route path="/projects/:_id" element={<FarmerDetails />} />
+          <Route path="/projects/create" element={<CreateProject />} />
+          <Route path="/projects/assign/:id" element={<AssignUsers />} />
+          <Route path="/projects/agronomist/:id" element={<ShowAgronomist />} />
         </Route>
       </Routes>
     </BrowserRouter>

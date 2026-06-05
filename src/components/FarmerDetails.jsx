@@ -1,23 +1,99 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useLocation } from 'react-router';
+import { useParams, useLocation } from 'react-router-dom';
 import {
     Container, Typography, Box, CircularProgress, Alert, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Tooltip, TextField, InputAdornment,
-    MenuItem
+    MenuItem, useTheme
 } from '@mui/material';
 import {
     Visibility as ViewIcon,
     Edit as EditIcon,
     Delete as DeleteIcon,
-    Search as SearchIcon
+    Search as SearchIcon,
+    FirstPage as FirstPageIcon,
+    LastPage as LastPageIcon,
+    KeyboardArrowLeft,
+    KeyboardArrowRight
 } from '@mui/icons-material';
+import TablePagination from '@mui/material/TablePagination';
+
+// --- CUSTOM ACTIONS COMPONENT FOR FIRST/LAST PAGE ---
+function TablePaginationActions(props) {
+    const { count, page, rowsPerPage, onPageChange } = props;
+
+    const handleFirstPageButtonClick = (event) => {
+        onPageChange(event, 0);
+    };
+
+    const handleBackButtonClick = (event) => {
+        onPageChange(event, page - 1);
+    };
+
+    const handleNextButtonClick = (event) => {
+        onPageChange(event, page + 1);
+    };
+
+    const handleLastPageButtonClick = (event) => {
+        onPageChange(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
+    };
+
+    return (
+        <Box sx={{ flexShrink: 0, ml: 2.5 }}>
+            <Tooltip title="Go to first page">
+                <span>
+                    <IconButton
+                        onClick={handleFirstPageButtonClick}
+                        disabled={page === 0}
+                        aria-label="first page"
+                    >
+                        <FirstPageIcon />
+                    </IconButton>
+                </span>
+            </Tooltip>
+            <Tooltip title="Go to previous page">
+                <span>
+                    <IconButton
+                        onClick={handleBackButtonClick}
+                        disabled={page === 0}
+                        aria-label="previous page"
+                    >
+                        <KeyboardArrowLeft />
+                    </IconButton>
+                </span>
+            </Tooltip>
+            <Tooltip title="Go to next page">
+                <span>
+                    <IconButton
+                        onClick={handleNextButtonClick}
+                        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
+                        aria-label="next page"
+                    >
+                        <KeyboardArrowRight />
+                    </IconButton>
+                </span>
+            </Tooltip>
+            <Tooltip title="Go to last page">
+                <span>
+                    <IconButton
+                        onClick={handleLastPageButtonClick}
+                        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
+                        aria-label="last page"
+                    >
+                        <LastPageIcon />
+                    </IconButton>
+                </span>
+            </Tooltip>
+        </Box>
+    );
+}
 
 const FarmerDetails = () => {
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [totalRecords, setTotalRecords] = useState(0);
     const { _id } = useParams();
     const token = localStorage.getItem('authToken');
     const location = useLocation();
-    const surveyCount = location.state.surveyCount;
-
-    console.log("Survey Count from location state:", surveyCount);
+    const surveyCount = location?.state?.surveyCount || 0;
 
     const [farmers, setFarmers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -40,10 +116,8 @@ const FarmerDetails = () => {
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
-        setFilters(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFilters(prev => ({ ...prev, [name]: value }));
+        setPage(0);
     };
 
     const fetchFarmers = useCallback(async (currentFilters) => {
@@ -57,6 +131,9 @@ const FarmerDetails = () => {
                 }
             });
 
+            queryParams.append('page', page + 1);
+            queryParams.append('limit', rowsPerPage);
+
             const response = await fetch(`${API_BASE_URL}/projects/${_id}/farmers?${queryParams.toString()}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -64,6 +141,7 @@ const FarmerDetails = () => {
 
             if (result.success) {
                 setFarmers(result.data);
+                setTotalRecords(result.pagination?.totalRecords || 0);
                 setError(null);
             } else {
                 setError('Failed to fetch farmer data');
@@ -73,7 +151,7 @@ const FarmerDetails = () => {
         } finally {
             setLoading(false);
         }
-    }, [_id, token]);
+    }, [_id, token, page, rowsPerPage]);
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -136,13 +214,11 @@ const FarmerDetails = () => {
 
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-            <TableContainer component={Paper} sx={{ boxShadow: 4, borderRadius: 2, maxHeight: '75vh' }}>
+            <TableContainer component={Paper} sx={{ boxShadow: 4, borderRadius: '8px 8px 0 0', maxHeight: '70vh' }}>
                 <Table stickyHeader sx={{ minWidth: 1500 }}>
                     <TableHead>
                         <TableRow>
-                            {/* Actions moved to first position */}
                             <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f8f9fa', width: 100 }} align="center">Actions</TableCell>
-                            {/* Farmer ID width set small */}
                             <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f8f9fa', width: 120 }}>Farmer ID</TableCell>
                             <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f8f9fa' }}>Farmer Name</TableCell>
                             <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f8f9fa' }}>Guardian Name</TableCell>
@@ -153,7 +229,6 @@ const FarmerDetails = () => {
                             <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f8f9fa' }}>State</TableCell>
                             <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f8f9fa' }}>Status</TableCell>
                         </TableRow>
-
                         <TableRow>
                             <TableCell sx={{ bgcolor: '#f8f9fa', py: 1 }} align="center">
                                 <Typography variant="caption" color="text.secondary">Filters</Typography>
@@ -184,7 +259,6 @@ const FarmerDetails = () => {
                             </TableCell>
                         </TableRow>
                     </TableHead>
-
                     <TableBody>
                         {loading && farmers.length === 0 ? (
                             <TableRow>
@@ -202,15 +276,10 @@ const FarmerDetails = () => {
                         ) : (
                             farmers.map((farmer) => (
                                 <TableRow key={farmer._id} hover>
-                                    {/* Action buttons moved to start */}
                                     <TableCell align="center">
                                         <Box display="flex" justifyContent="center" gap={1}>
                                             <Tooltip title="Edit Farmer">
-                                                <IconButton
-                                                    size="small"
-                                                    color="info"
-                                                    sx={{ border: '1px solid #e0e0e0', borderRadius: '4px' }}
-                                                >
+                                                <IconButton size="small" color="info" sx={{ border: '1px solid #e0e0e0', borderRadius: '4px' }}>
                                                     <EditIcon fontSize="small" />
                                                 </IconButton>
                                             </Tooltip>
@@ -218,18 +287,13 @@ const FarmerDetails = () => {
                                                 <IconButton
                                                     size="small"
                                                     onClick={() => handleDelete(farmer._id)}
-                                                    sx={{
-                                                        border: '1px solid #ffcdd2',
-                                                        color: '#d32f2f',
-                                                        borderRadius: '4px'
-                                                    }}
+                                                    sx={{ border: '1px solid #ffcdd2', color: '#d32f2f', borderRadius: '4px' }}
                                                 >
                                                     <DeleteIcon fontSize="small" />
                                                 </IconButton>
                                             </Tooltip>
                                         </Box>
                                     </TableCell>
-                                    {/* Small Farmer ID cell */}
                                     <TableCell sx={{ fontSize: '0.85rem', fontFamily: 'monospace', width: 120 }}>
                                         {farmer.farmerID || farmer._id.slice(-8).toUpperCase()}
                                     </TableCell>
@@ -256,6 +320,24 @@ const FarmerDetails = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            {/* UPDATED PAGINATION SECTION */}
+            <Paper sx={{ boxShadow: 4, borderRadius: '0 0 8px 8px', borderTop: '1px solid #e0e0e0' }}>
+                <TablePagination
+                    component="div"
+                    count={totalRecords}
+                    page={page}
+                    onPageChange={(event, newPage) => setPage(newPage)}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={(event) => {
+                        setRowsPerPage(parseInt(event.target.value, 10));
+                        setPage(0);
+                    }}
+                    rowsPerPageOptions={[10, 25, 50, 100]}
+                    // This is the key part to show First/Last icons
+                    ActionsComponent={TablePaginationActions}
+                />
+            </Paper>
         </Container>
     );
 };

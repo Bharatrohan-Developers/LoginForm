@@ -25,7 +25,7 @@ import {
     Person as PersonIcon,
     ErrorOutlined as ErrorOutline
 } from '@mui/icons-material';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router-dom';
 
 export default function AssignUsers() {
     const navigate = useNavigate();

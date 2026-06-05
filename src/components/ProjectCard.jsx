@@ -1,6 +1,6 @@
 import { Card, CardContent, CardMedia, Typography, Box, CardActions, Tooltip, IconButton, List, ListItem, ListItemText } from '@mui/material';
 import Groups2Icon from '@mui/icons-material/Groups2';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 
 const ProjectCard = ({ project }) => {
   const navigate = useNavigate();

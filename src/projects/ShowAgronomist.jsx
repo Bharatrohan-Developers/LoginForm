@@ -16,7 +16,7 @@ import {
     ArrowBack as BackIcon,
     Person as PersonIcon
 } from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function ShowAgronomist() {
     const navigate = useNavigate();
