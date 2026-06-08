@@ -58,7 +58,7 @@ const Layout = () => {
             </AppBar>
 
             {/* BODY / CONTENT */}
-            <Box component="main" sx={{ py: 2, minHeight: '100vh', backgroundImage: 'url(/bgMI.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
+            <Box component="main" sx={{ py: 2, minHeight: '100vh',  backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
                 <Outlet />
             </Box>
 
