@@ -34,6 +34,7 @@ const FULL_DRAWER_WIDTH = 260;
 const COLLAPSED_DRAWER_WIDTH = 75;
 const LOGO_URL = "https://media.licdn.com/dms/image/v2/D5616AQGWrf8jvZ_AkQ/profile-displaybackgroundimage-shrink_200_800/B56ZaLRjBqHUAU-/0/1746093357189?e=2147483647&v=beta&t=eucW_8F2ZxmDo-yISEiZs1uSWuB8-vt4O-egVZl4_mU";
 
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -137,6 +138,13 @@ const AdminDashboard = () => {
       </List>
     </Box>
   );
+
+  const handleLogout = () => {
+    // Clear all relevant data from localStorage
+    localStorage.clear();
+    sessionStorage.clear();
+    navigate('/'); // Redirect to login page after logout
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -264,7 +272,7 @@ const AdminDashboard = () => {
             <AccountCircleIcon sx={{ mr: 1.5, fontSize: 20 }} /> Profile
           </MenuItem>
           <Divider />
-          <MenuItem onClick={() => navigate('/')} sx={{ color: 'error.main' }}>
+          <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
             <LogoutIcon sx={{ mr: 1.5, fontSize: 20 }} /> Logout
           </MenuItem>
         </Menu>

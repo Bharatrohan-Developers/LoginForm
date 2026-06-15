@@ -26,6 +26,7 @@ import {
     ErrorOutlined as ErrorOutline
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
+import api from '../api/axiosConfig'; // Ensure this path is correct based on your project structure
 
 export default function AssignUsers() {
     const navigate = useNavigate();
@@ -45,11 +46,7 @@ export default function AssignUsers() {
         const fetchUsers = async () => {
             setLoading(true);
             try {
-                const response = await axios.get(`${import.meta.env.VITE_URL}/users`, {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-                    }
-                });
+                const response = await api.get(`${import.meta.env.VITE_URL}/users`);
 
                 if (response.data.success) {
                     setMembers(response.data.data);
@@ -86,15 +83,10 @@ export default function AssignUsers() {
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            const response = await axios.patch(
+            const response = await api.patch(
                 `${import.meta.env.VITE_URL}/projects/${projectId}/users`,
                 {
                     "users": [...selectedIds]
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-                    }
                 }
             );
 

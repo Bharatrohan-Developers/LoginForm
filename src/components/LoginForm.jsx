@@ -6,9 +6,9 @@ import { Visibility, VisibilityOff, LockOutlined } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
+import { useNavigate } from 'react-router-dom';
+import api from '../api/axiosConfig'; // Ensure this path is correct based on your project structure
 // 1. Validation Schema
 const schema = yup.object({
   email: yup.string()
@@ -38,7 +38,7 @@ const LoginForm = () => {
     setLoading(true);
     setServerError('');
     try {
-      const response = await axios.post(`${import.meta.env.VITE_URL}/auth/login`, {
+      const response = await api.post('/auth/login', {
         email: data.email,
         password: data.password, // In production, never send passwords in plain text!
         timestamp: new Date()

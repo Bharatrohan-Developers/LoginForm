@@ -1,17 +1,16 @@
-import { Card, CardContent, CardMedia, Typography, Box, CardActions, Tooltip, IconButton, List, ListItem, ListItemText } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography, Box, CardActions, Tooltip, IconButton } from '@mui/material';
 import Groups2Icon from '@mui/icons-material/Groups2';
 import { useNavigate } from 'react-router-dom';
+import EditIcon from '@mui/icons-material/Edit';
 
-const ProjectCard = ({ project }) => {
+// 1. Added 'canEdit' prop to control visibility of the edit button
+const ProjectCard = ({ project, onEdit, canEdit }) => {
   const navigate = useNavigate();
+  const role = localStorage.getItem('role');
 
-  // Helper to render the content inside the Tooltip
   const renderAgronomistList = () => {
     const agronomists = project.assignedAgronomists;
-
-    if (!agronomists || agronomists.length === 0) {
-      return "No agronomists assigned";
-    }
+    if (!agronomists || agronomists.length === 0) return "No agronomists assigned";
 
     return (
       <Box sx={{ p: 0.5 }}>
@@ -28,23 +27,49 @@ const ProjectCard = ({ project }) => {
   };
 
   return (
-    <Card sx={{
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      borderRadius: 3,
-      boxShadow: 3,
-      cursor: 'pointer', // Indicates the whole card is clickable
-      transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-      '&:hover': {
-        transform: 'scale(1.05)',
-        boxShadow: 9
+    <Card
+      sx={{
+        position: 'relative',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: 3,
+        boxShadow: 3,
+        cursor: 'pointer',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        '&:hover': {
+          transform: 'scale(1.05)',
+          boxShadow: 9
+        }
+      }}
+      onClick={() =>
+        navigate(`/projects/${project._id}`, {
+          state: { surveyCount: project.surveyCount }
+        })
       }
-    }}
-      onClick={() => navigate(`/projects/${project._id}`, {
-        state: { surveyCount: project.surveyCount }
-      })}
     >
+      {/* 2. Wrap the Edit button in a conditional check */}
+      {canEdit && (
+        <Tooltip title="Edit Project" arrow>
+          <IconButton
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 2,
+              bgcolor: 'rgba(255,255,255,0.9)',
+              '&:hover': { bgcolor: 'white' }
+            }}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevents navigating to FarmerDetails
+              onEdit(project);    // Opens the dialog in ProjectList
+            }}
+          >
+            <EditIcon color="primary" />
+          </IconButton>
+        </Tooltip>
+      )}
+
       <CardMedia
         component="img"
         height="180"
@@ -69,21 +94,17 @@ const ProjectCard = ({ project }) => {
           arrow
           placement="top"
           componentsProps={{
-            tooltip: {
-              sx: {
-                bgcolor: 'rgba(0, 0, 0, 0.85)',
-                padding: '10px',
-                borderRadius: '8px'
-              },
-            },
+            tooltip: { sx: { bgcolor: 'rgba(0, 0, 0, 0.85)', padding: '10px', borderRadius: '8px' } },
           }}
         >
           <IconButton
             onClick={(e) => {
-              e.stopPropagation(); // 👈 Prevents the Card's onClick from firing
-              navigate(`/projects/agronomist/${project._id}`, {
+              e.stopPropagation();
+              if (role === 'Agronomist') return; // Prevent navigation for Agronomists
+              navigate(`/projects/assign/${project._id}`, {
                 state: { assignedAgronomists: project.assignedAgronomists }
               });
+
             }}
           >
             <Groups2Icon color="primary" />

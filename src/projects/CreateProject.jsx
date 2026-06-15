@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon from '@mui/icons-material/Save';
+import api from '../api/axiosConfig'; // Ensure this path is correct based on your project structure
 
 const CreateProject = () => {
     const navigate = useNavigate();
@@ -45,17 +46,11 @@ const CreateProject = () => {
         setError(null);
 
         try {
-            const response = await axios.post(
+            const response = await api.post(
                 `${import.meta.env.VITE_URL}/projects`,
-                formData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
+                formData
             );
-
+            
             if (response.status === 201 || response.status === 200) {
                 // Redirect back to project list on success
                 navigate(`/projects/assign/${response.data.data._id}`);
@@ -75,10 +70,10 @@ const CreateProject = () => {
         <Container maxWidth="md" sx={{ py: 6 }}>
             {/* Breadcrumbs for Navigation */}
             <Breadcrumbs sx={{ mb: 3 }}>
-                <Link 
-                    underline="hover" 
-                    color="inherit" 
-                    onClick={() => navigate('/dashboard')} 
+                <Link
+                    underline="hover"
+                    color="inherit"
+                    onClick={() => navigate('/dashboard')}
                     sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                 >
                     <ArrowBackIcon sx={{ mr: 0.5, fontSize: 'inherit' }} /> My Projects
@@ -88,11 +83,11 @@ const CreateProject = () => {
 
             <form onSubmit={handleSubmit}>
                 {/* HEADER ROW */}
-                <Box 
-                    sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
+                <Box
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
                         mb: 4,
                         gap: 2
                     }}
@@ -114,9 +109,9 @@ const CreateProject = () => {
                         variant="contained"
                         disabled={!isFormValid || loading}
                         startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-                        sx={{ 
-                            height: '56px', 
-                            px: 4, 
+                        sx={{
+                            height: '56px',
+                            px: 4,
                             borderRadius: 2,
                             textTransform: 'none',
                             fontWeight: 'bold'
@@ -133,7 +128,7 @@ const CreateProject = () => {
                     <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
                         Project Details
                     </Typography>
-                    
+
                     <Grid container spacing={3}>
                         <Grid item xs={12} sm={6}>
                             <TextField
@@ -148,7 +143,7 @@ const CreateProject = () => {
                         </Grid>
                         <Grid item xs={12} sm={6}>
                             <TextField
-                                
+
                                 name="startDate"
                                 type="date"
                                 fullWidth
