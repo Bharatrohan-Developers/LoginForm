@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LoginForm from './components/LoginForm';
 import ProjectList from './components/ProjectList';
 import FarmerDetails from './components/FarmerDetails';
@@ -31,6 +31,8 @@ function App() {
           <Route path="/projects/assign/:id" element={<AssignUsers />} />
           <Route path="/projects/agronomist/:id" element={<ShowAgronomist />} />
         </Route>
+
+        <Route path="*" element={<div>Page Not Found</div>} />
       </Routes>
     </BrowserRouter>
   );

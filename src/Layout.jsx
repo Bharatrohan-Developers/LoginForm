@@ -77,20 +77,23 @@ const Layout = () => {
                     disableGutters
                     sx={{
                         justifyContent: 'space-between',
-                        px: 3
+                        px: { xs: 1, sm: 3 }
                     }}
                 >
                     {/* Logo */}
                     <Box
                         component="img"
-                        onClick={() => navigate('/dashboard')}
+                        onClick={() => navigate(role === 'Admin' ? '/admin' : '/dashboard')}
                         sx={{
-                            height: 40,
+                            marginTop: 1,
+                            height: { xs: 40, sm: 40 }, // Optional: slightly smaller logo on mobile
                             width: 'auto',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            // Optional: ensure no hidden margin on the image itself
+                            mb: 1
                         }}
                         alt="BharatRohan Logo"
-                        src="https://media.licdn.com/dms/image/v2/D5616AQGWrf8jvZ_AkQ/profile-displaybackgroundimage-shrink_200_800/B56ZaLRjBqHUAU-/0/1746093357189?e=2147483647&v=beta&t=eucW_8F2ZxmDo-yISEiZs1uSWuB8-vt4O-egVZl4_mU"
+                        src="/bha.jpg"
                     />
 
                     {/* User Section */}

@@ -12,6 +12,7 @@ import api from '../api/axiosConfig'; // Ensure this path is correct based on yo
 // 1. Validation Schema
 const schema = yup.object({
   email: yup.string()
+    .trim()
     .email('Invalid email format')
     .required('Email is required'),
   password: yup.string()
@@ -51,15 +52,27 @@ const LoginForm = () => {
 
         setSuccess(true);
         console.log('Login Successful:', response.data);
-        // Redirect user or save token here
-        if (response.data.user.role === 'Admin') {
-          navigate('/admin');
-        } else {
-          navigate('/dashboard');
-        }
+
+        setTimeout(() => {
+          // Redirect user or save token here
+          if (response.data.user.role === 'Admin') {
+            navigate('/admin');
+          } else {
+            navigate('/dashboard');
+          }
+        }, 2000);
+
       }
     } catch (error) {
-      setServerError('Invalid credentials or API error. Please try again.');
+      if (error.response?.status === 401) {
+        setServerError('Invalid email or password');
+      }
+      else if (error.response?.status === 500) {
+        setServerError('Server unavailable');
+      }
+      else {
+        setServerError('Network error');
+      }
     } finally {
       setLoading(false);
     }
@@ -114,7 +127,8 @@ const LoginForm = () => {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)} edge="end">
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>

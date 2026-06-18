@@ -32,7 +32,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 
 const FULL_DRAWER_WIDTH = 260;
 const COLLAPSED_DRAWER_WIDTH = 75;
-const LOGO_URL = "https://media.licdn.com/dms/image/v2/D5616AQGWrf8jvZ_AkQ/profile-displaybackgroundimage-shrink_200_800/B56ZaLRjBqHUAU-/0/1746093357189?e=2147483647&v=beta&t=eucW_8F2ZxmDo-yISEiZs1uSWuB8-vt4O-egVZl4_mU";
+
 
 
 const AdminDashboard = () => {
@@ -164,21 +164,21 @@ const AdminDashboard = () => {
         >
           <Toolbar sx={{ justifyContent: 'space-between' }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <IconButton color="inherit" onClick={handleToggle} edge="start" sx={{ mr: { xs: 1, sm: 2 } }}>
+              <IconButton color="inherit" onClick={handleToggle} edge="start" sx={{ mr: 0.5 }}>
                 <MenuIcon />
               </IconButton>
               <Box
                 component="img"
-                src={LOGO_URL}
+                src='/bha.jpg'
                 alt="Logo"
-                sx={{ height: { xs: 28, sm: 35 }, cursor: 'pointer' }}
+                sx={{ height: { xs: 28, sm: 40 }, cursor: 'pointer' }}
               />
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
               <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'right' }}>
                 <Typography variant="body2" sx={{ fontWeight: 700, lineHeight: 1.2 }}>{role}</Typography>
-                <Typography variant="caption" color="text.secondary">Admin Panel</Typography>
+                <Typography variant="caption" color="text.secondary">Welcome back!</Typography>
               </Box>
               <IconButton onClick={handleMenuOpen} sx={{ p: 0.5 }}>
                 <Avatar

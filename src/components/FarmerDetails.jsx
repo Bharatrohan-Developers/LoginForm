@@ -26,9 +26,11 @@ import {
     Map as ViewMapIcon,
     Clear as ClearIcon,
     Campaign as CampaignIcon,
+    Visibility as ViewIcon,
 } from '@mui/icons-material';
 import TablePagination from '@mui/material/TablePagination';
 import AdvisoryGenerator from './advisory/AdvisoryGenerator';
+import api from '../api/axiosConfig'; // Ensure this path is correct based on your project structure
 
 // --- CUSTOM PAGINATION ACTIONS ---
 function TablePaginationActions(props) {
@@ -104,7 +106,7 @@ const FarmerDetails = () => {
             return true;
         });
     }, [columns, filters.survey]);
-    
+
 
     // Check if any filter is active
     const isFiltering = Object.entries(filters).some(([key, value]) => {
@@ -118,8 +120,7 @@ const FarmerDetails = () => {
         setLoading(true);
         try {
             const queryParams = new URLSearchParams();
-            queryParams.append('page', page + 1);
-            queryParams.append('limit', rowsPerPage);
+
 
             Object.keys(currentFilters).forEach(key => {
                 const value = currentFilters[key];
@@ -129,10 +130,12 @@ const FarmerDetails = () => {
                 }
             });
 
-            const response = await fetch(`${API_BASE_URL}/projects/${_id}/farmers?${queryParams.toString()}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const result = await response.json();
+            queryParams.append('page', page + 1);
+            queryParams.append('limit', rowsPerPage);
+
+            const response = await api.get(`${API_BASE_URL}/projects/${_id}/farmers?${queryParams.toString()}`);
+            const result = response.data;
+            console.log(response);
 
             if (result.success) {
                 setFarmers(result.data || []);
@@ -210,7 +213,7 @@ const FarmerDetails = () => {
             setUploadStatus({ type: 'error', message: 'Please upload a CSV or Excel file.' });
         }
     };
-    
+
     // Simulated upload function - replace with actual API call
     const handleUploadSubmit = async () => {
         if (!selectedFile) return;
@@ -225,6 +228,16 @@ const FarmerDetails = () => {
             setUploadStatus({ type: 'error', message: 'Upload failed.' });
         } finally {
             setUploading(false);
+        }
+    };
+
+    const handlePreviewAdvisory = (farmer) => {
+        if (farmer.advisoryUrl) {
+            window.open(farmer.advisoryUrl, '_blank');
+        } else {
+            // Logic to open your preview modal or fetch the advisory content
+            console.log("Previewing advisory for:", farmer.name);
+            alert("Opening preview for " + farmer.name);
         }
     };
 
@@ -266,7 +279,7 @@ const FarmerDetails = () => {
 
             <Paper sx={{ boxShadow: 4, borderRadius: '8px', overflow: 'hidden' }}>
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#fff', borderBottom: '1px solid #eee' }}>
-                    <Typography variant="h6" fontWeight="600" color="primary">Results ({totalRecords})</Typography>
+                    <Typography variant="h6" fontWeight="600" color="primary">Farmers Survey Wise ({totalRecords})</Typography>
 
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         {isFiltering && <Button size="small" color="error" startIcon={<ClearIcon />} onClick={handleClearFilters}>Clear Search</Button>}
@@ -372,11 +385,38 @@ const FarmerDetails = () => {
                                                     <Tooltip title="View Map"><IconButton color="secondary" size="small" onClick={() => handleOpenPrescriptionMap(farmer._id)}><MapIcon fontSize="small" /></IconButton></Tooltip>
                                                 </TableCell>
                                             );
-                                            if (col.id === 'advisory') return (
-                                                <TableCell key={col.id} align="center">
-                                                    <Tooltip title="Upload Advisory"><IconButton color="info" size="small" onClick={() => handleUploadAdvisory(farmer._id)}><AdvisoryIcon fontSize="small" /></IconButton></Tooltip>
-                                                </TableCell>
-                                            );
+                                            if (col.id === 'advisory') {
+                                                // Check if advisory and fileUrl exist in the farmer object
+                                                const hasAdvisory = farmer.advisory && farmer.advisory.fileUrl;
+
+                                                return (
+                                                    <TableCell key={col.id} align="center">
+                                                        {hasAdvisory ? (
+                                                            // IF ADVISORY EXISTS: Show Preview Button
+                                                            <Tooltip title="Preview Advisory">
+                                                                <IconButton
+                                                                    color="success"
+                                                                    size="small"
+                                                                    onClick={() => window.open(farmer.advisory.fileUrl, '_blank')}
+                                                                >
+                                                                    <PreviewIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        ) : (
+                                                            // IF ADVISORY MISSING: Show Upload Button (Existing logic)
+                                                            <Tooltip title="Upload Advisory">
+                                                                <IconButton
+                                                                    color="info"
+                                                                    size="small"
+                                                                    onClick={() => handleUploadAdvisory(farmer._id)}
+                                                                >
+                                                                    <AdvisoryIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        )}
+                                                    </TableCell>
+                                                );
+                                            }
                                             if (col.id === 'lat') return <TableCell key={col.id}>{farmer.farmCentralLatLong?.lat || '—'}</TableCell>;
                                             if (col.id === 'long') return <TableCell key={col.id}>{farmer.farmCentralLatLong?.long || '—'}</TableCell>;
                                             if (col.id === 'createdAt') return <TableCell key={col.id}>{new Date(farmer.createdAt).toLocaleDateString()}</TableCell>;

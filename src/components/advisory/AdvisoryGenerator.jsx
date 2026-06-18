@@ -25,7 +25,7 @@ import {
     Visibility as EyeIcon,
 } from "@mui/icons-material";
 
-import api from "../api/axiosConfig"; // Ensure this path is correct based on your project structure
+import api from "../../api/axiosConfig"; // Ensure this path is correct based on your project structure
 
 const AdvisoryGenerator = ({ open, onClose, farmerName }) => {
     const [form, setForm] = useState({
