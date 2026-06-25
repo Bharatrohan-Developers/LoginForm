@@ -1,27 +1,20 @@
 import React, { useState } from 'react';
 import {
-  Container, Box, Typography, TextField, Button, IconButton, InputAdornment, Alert, CircularProgress, Paper, Avatar
+  Box, Typography, TextField, Button, IconButton, InputAdornment,
+  Alert, CircularProgress, Paper, Link
 } from '@mui/material';
-import { Visibility, VisibilityOff, LockOutlined } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Grass } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axiosConfig'; // Ensure this path is correct based on your project structure
-// 1. Validation Schema
+import api from '../api/axiosConfig';
+
+// Validation Schema
 const schema = yup.object({
-  email: yup.string()
-    .trim()
-    .email('Invalid email format')
-    .required('Email is required'),
-  password: yup.string()
-    .max(15, 'Password must be at most 15 characters')
-    .min(6, 'Password must be at least 6 characters')
-    .required('Password is required'),
+  email: yup.string().trim().email('Invalid email format').required('Email is required'),
+  password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
 }).required();
-
-
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -29,126 +22,217 @@ const LoginForm = () => {
   const [serverError, setServerError] = useState('');
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
-  // 3. Form Hook Setup
+
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema)
   });
 
-  // 4. Submit Handler
   const onSubmit = async (data) => {
-    setLoading(true);
     setServerError('');
+    setLoading(true);
+
     try {
       const response = await api.post('/auth/login', {
         email: data.email,
-        password: data.password, // In production, never send passwords in plain text!
-        timestamp: new Date()
+        password: data.password,
       });
 
-      if (response.data.token) {
-
+      if (response.data.token && response.data?.user?.role) {
         localStorage.setItem('authToken', response.data.token);
         localStorage.setItem('role', response.data.user.role);
-
         setSuccess(true);
-        console.log('Login Successful:', response.data);
-
-        setTimeout(() => {
-          // Redirect user or save token here
-          if (response.data.user.role === 'Admin') {
-            navigate('/admin');
-          } else {
-            navigate('/dashboard');
-          }
-        }, 2000);
-
+        navigate(
+          response.data.user.role?.toLowerCase() === 'admin'
+            ? '/admin'
+            : '/dashboard'
+        );
       }
     } catch (error) {
-      if (error.response?.status === 401) {
-        setServerError('Invalid email or password');
-      }
-      else if (error.response?.status === 500) {
-        setServerError('Server unavailable');
-      }
-      else {
-        setServerError('Network error');
-      }
+      setServerError(error.response?.data?.message || 'Invalid credentials or server error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Box
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background:
+          "linear-gradient(135deg,#0f172a 0%, #14532d 50%, #166534 100%)",
+        p: 2,
+      }}
+    >
+      <Paper
+        elevation={0}
         sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          width: "100%",
+          maxWidth: 430,
+          p: 5,
+          borderRadius: 5,
+          backdropFilter: "blur(20px)",
+          background: "rgba(255,255,255,0.95)",
+          boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
         }}
       >
-        <Paper elevation={3} sx={{ p: 4, width: '100%', borderRadius: 2 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
-            <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
-              <LockOutlined />
-            </Avatar>
-            <Typography component="h1" variant="h5">
-              Sign In
-            </Typography>
+        {/* Logo */}
+        <Box sx={{ textAlign: "center", mb: 4 }}>
+          <Box
+            sx={{
+              width: 70,
+              height: 70,
+              borderRadius: "50%",
+              bgcolor: "#166534",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mx: "auto",
+              mb: 2,
+            }}
+          >
+            <Grass sx={{ color: "#fff", fontSize: 38 }} />
           </Box>
 
-          {serverError && <Alert severity="error" sx={{ mb: 2 }}>{serverError}</Alert>}
-          {success && <Alert severity="success" sx={{ mb: 2 }}>Login successful!</Alert>}
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 800,
+              color: "#14532d",
+            }}
+          >
+            BharatRohan
+          </Typography>
 
-          <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-            <TextField
-              margin="normal"
-              fullWidth
-              label="Email Address"
-              autoComplete="email"
-              autoFocus
-              {...register('email')}
-              error={!!errors.email}
-              helperText={errors.email?.message}
-              disabled={loading}
-            />
+          <Typography color="text.secondary">
+            Sign in to your account
+          </Typography>
+        </Box>
 
-            <TextField
-              margin="normal"
-              fullWidth
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="current-password"
-              {...register('password')}
-              error={!!errors.password}
-              helperText={errors.password?.message}
-              disabled={loading}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)} edge="end">
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
+        {serverError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {serverError}
+          </Alert>
+        )}
+
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            Login successful
+          </Alert>
+        )}
+
+        <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+          <TextField
+            fullWidth
+            label="Email Address"
+            margin="normal"
+            autoComplete="email"
+            {...register("email")}
+            error={!!errors.email}
+            helperText={errors.email?.message}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 3,
+              },
+            }}
+          />
+
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            {...register("password")}
+            error={!!errors.password}
+            helperText={errors.password?.message}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 3,
+              },
+            }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Box textAlign="right" mt={1}>
+            <Link
+              underline="none"
+              onClick={() => navigate("/forgot-password")}
+              sx={{
+                color: "#166534",
+                fontWeight: 600,
+                cursor: "pointer",
               }}
-            />
-
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2, py: 1.2 }}
-              disabled={loading}
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
-            </Button>
+              Forgot password?
+            </Link>
           </Box>
-        </Paper>
-      </Box>
-    </Container>
+
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            disabled={loading}
+            sx={{
+              mt: 4,
+              py: 1.8,
+              borderRadius: 3,
+              textTransform: "none",
+              fontSize: 17,
+              fontWeight: 700,
+              background:
+                "linear-gradient(90deg,#166534,#22c55e)",
+              boxShadow: "0 10px 30px rgba(34,197,94,.3)",
+            }}
+          >
+            {loading ? (
+              <CircularProgress size={22} color="inherit" />
+            ) : (
+              "Sign In"
+            )}
+          </Button>
+
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={() => navigate("/request-access")}
+            sx={{
+              mt: 2,
+              py: 1.6,
+              borderRadius: 3,
+              textTransform: "none",
+              borderColor: "#166534",
+              color: "#166534",
+              fontWeight: 700,
+            }}
+          >
+            Request Access
+          </Button>
+        </Box>
+
+        <Typography
+          textAlign="center"
+          mt={5}
+          variant="caption"
+          color="text.secondary"
+        >
+          © {new Date().getFullYear()} BharatRohan Airborne Innovations Pvt. Ltd.
+        </Typography>
+      </Paper>
+    </Box>
   );
 };
 
