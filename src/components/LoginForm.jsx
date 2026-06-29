@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import {
   Box, Typography, TextField, Button, IconButton, InputAdornment,
-  Alert, CircularProgress, Paper, Link
+  Alert, CircularProgress, Paper, useTheme
 } from '@mui/material';
-import { Visibility, VisibilityOff, Grass } from '@mui/icons-material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -17,6 +17,7 @@ const schema = yup.object({
 }).required();
 
 const LoginForm = () => {
+  const theme = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
@@ -61,9 +62,12 @@ const LoginForm = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        background:
-          "linear-gradient(135deg,#0f172a 0%, #14532d 50%, #166534 100%)",
+        backgroundImage: "url('/login_bgi.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
         p: 2,
+        backgroundColor: theme.palette.background.default,
       }}
     >
       <Paper
@@ -71,131 +75,215 @@ const LoginForm = () => {
         sx={{
           width: "100%",
           maxWidth: 430,
-          p: 5,
-          borderRadius: 5,
+          p: { xs: 3, sm: 5 },
+          borderRadius: 4,
           backdropFilter: "blur(20px)",
-          background: "rgba(255,255,255,0.95)",
-          boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
+          backgroundColor: "rgba(255,255,255,0.95)",
+          boxShadow: "0 20px 50px rgba(25,60,52,0.2)",
         }}
       >
-        {/* Logo */}
-        <Box sx={{ textAlign: "center", mb: 4 }}>
+        {/* Logo Section */}
+        <Box sx={{ textAlign: "center", mb: 5 }}>
           <Box
             sx={{
-              width: 70,
-              height: 70,
+              width: 80,
+              height: 80,
               borderRadius: "50%",
-              bgcolor: "#166534",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               mx: "auto",
-              mb: 2,
+              mb: 3,
+              overflow: "hidden",
+              backgroundColor: theme.palette.background.default,
+              boxShadow: `0 4px 12px ${theme.palette.primary.main}20`,
             }}
           >
-            <Grass sx={{ color: "#fff", fontSize: 38 }} />
+            <Box
+              component="img"
+              src="/logo.svg"
+              alt="BharatRohan Logo"
+              sx={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+              }}
+            />
           </Box>
 
           <Typography
-            variant="h4"
+            variant="h3"
             sx={{
               fontWeight: 800,
-              color: "#14532d",
+              color: theme.palette.primary.main,
+              mb: 1,
             }}
           >
             BharatRohan
           </Typography>
 
-          <Typography color="text.secondary">
+          <Typography
+            variant="body2"
+            sx={{
+              color: theme.palette.text.secondary,
+              fontSize: "0.95rem",
+            }}
+          >
             Sign in to your account
           </Typography>
         </Box>
 
+        {/* Alerts */}
         {serverError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert 
+            severity="error" 
+            sx={{ mb: 2, borderRadius: 2 }}
+            onClose={() => setServerError('')}
+          >
             {serverError}
           </Alert>
         )}
 
         {success && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            Login successful
+          <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
+            Login successful! Redirecting...
           </Alert>
         )}
 
+        {/* Form */}
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+          {/* Email Field */}
           <TextField
             fullWidth
             label="Email Address"
+            placeholder="Enter your email"
             margin="normal"
             autoComplete="email"
             {...register("email")}
             error={!!errors.email}
             helperText={errors.email?.message}
             sx={{
+              mb: 2,
               "& .MuiOutlinedInput-root": {
-                borderRadius: 3,
+                borderRadius: 2,
+                backgroundColor: "rgba(255,255,255,0.8)",
+                transition: "all 0.3s ease",
+              },
+              "& .MuiOutlinedInput-input": {
+                color: theme.palette.text.primary,
+                fontSize: "1rem",
+              },
+              "& .MuiInputLabel-root": {
+                color: theme.palette.text.secondary,
+                fontSize: "0.95rem",
+              },
+              "& .MuiInputLabel-root.Mui-focused": {
+                color: theme.palette.secondary.main,
+              },
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: theme.palette.text.primary + "30",
+              },
+              "&:hover .MuiOutlinedInput-notchedOutline": {
+                borderColor: theme.palette.primary.main,
+              },
+              "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
+                borderColor: theme.palette.secondary.main,
+              },
+              "& .MuiFormHelperText-root": {
+                color: theme.palette.error.main,
+                fontSize: "0.8rem",
+                mt: 0.5,
               },
             }}
           />
 
+          {/* Password Field */}
           <TextField
             fullWidth
-            margin="normal"
             label="Password"
+            placeholder="Enter your password"
+            margin="normal"
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             {...register("password")}
             error={!!errors.password}
             helperText={errors.password?.message}
             sx={{
+              mb: 1,
               "& .MuiOutlinedInput-root": {
-                borderRadius: 3,
+                borderRadius: 2,
+                backgroundColor: "rgba(255,255,255,0.8)",
+                transition: "all 0.3s ease",
+              },
+              "& .MuiOutlinedInput-input": {
+                color: theme.palette.text.primary,
+                fontSize: "1rem",
+              },
+              "& .MuiInputLabel-root": {
+                color: theme.palette.text.secondary,
+                fontSize: "0.95rem",
+              },
+              "& .MuiInputLabel-root.Mui-focused": {
+                color: theme.palette.secondary.main,
+              },
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: theme.palette.text.primary + "30",
+              },
+              "&:hover .MuiOutlinedInput-notchedOutline": {
+                borderColor: theme.palette.primary.main,
+              },
+              "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
+                borderColor: theme.palette.secondary.main,
+              },
+              "& .MuiFormHelperText-root": {
+                color: theme.palette.error.main,
+                fontSize: "0.8rem",
+                mt: 0.5,
               },
             }}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="toggle password visibility"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={() => setShowPassword(!showPassword)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      edge="end"
+                      size="small"
+                      sx={{
+                        color: theme.palette.text.secondary,
+                      }}
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
             }}
           />
 
-          <Box textAlign="right" mt={1}>
-            <Link
-              underline="none"
-              onClick={() => navigate("/forgot-password")}
-              sx={{
-                color: "#166534",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              Forgot password?
-            </Link>
-          </Box>
-
+          {/* Sign In Button */}
           <Button
             fullWidth
             type="submit"
             variant="contained"
+            color="primary"
             disabled={loading}
             sx={{
               mt: 4,
-              py: 1.8,
-              borderRadius: 3,
-              textTransform: "none",
-              fontSize: 17,
-              fontWeight: 700,
-              background:
-                "linear-gradient(90deg,#166534,#22c55e)",
-              boxShadow: "0 10px 30px rgba(34,197,94,.3)",
+              py: 1.5,
+              fontSize: "1rem",
+              fontWeight: 600,
+              boxShadow: `0 4px 12px ${theme.palette.primary.main}30`,
+              transition: "all 0.3s ease",
+              "&:hover": {
+                boxShadow: `0 8px 24px ${theme.palette.primary.main}40`,
+              },
+              "&:disabled": {
+                backgroundColor: theme.palette.text.secondary + "40",
+                color: theme.palette.text.secondary,
+              },
             }}
           >
             {loading ? (
@@ -205,29 +293,39 @@ const LoginForm = () => {
             )}
           </Button>
 
+          {/* Request Access Button */}
           <Button
             fullWidth
-            variant="outlined"
+            variant="contained"
+            color="secondary"
             onClick={() => navigate("/request-access")}
             sx={{
               mt: 2,
-              py: 1.6,
-              borderRadius: 3,
-              textTransform: "none",
-              borderColor: "#166534",
-              color: "#166534",
-              fontWeight: 700,
+              py: 1.5,
+              fontSize: "1rem",
+              fontWeight: 600,
+              boxShadow: `0 4px 12px ${theme.palette.secondary.main}30`,
+              transition: "all 0.3s ease",
+              "&:hover": {
+                boxShadow: `0 8px 24px ${theme.palette.secondary.main}40`,
+              },
             }}
           >
             Request Access
           </Button>
         </Box>
 
+        {/* Footer */}
         <Typography
-          textAlign="center"
-          mt={5}
           variant="caption"
-          color="text.secondary"
+          sx={{
+            display: "block",
+            mt: 5,
+            color: theme.palette.text.secondary,
+            letterSpacing: "0.5px",
+            opacity: 0.7,
+            textAlign: "center",
+          }}
         >
           © {new Date().getFullYear()} BharatRohan Airborne Innovations Pvt. Ltd.
         </Typography>
@@ -237,3 +335,19 @@ const LoginForm = () => {
 };
 
 export default LoginForm;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

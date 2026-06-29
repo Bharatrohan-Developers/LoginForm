@@ -51,7 +51,6 @@ const FarmerDetails = () => {
     const token = localStorage.getItem('authToken');
     const role = localStorage.getItem('role');
     const surveyCount = location?.state?.surveyCount || 0;
-    const API_BASE_URL = import.meta.env.VITE_URL;
 
     // Table State
     const [page, setPage] = useState(0);
@@ -133,7 +132,7 @@ const FarmerDetails = () => {
             queryParams.append('page', page + 1);
             queryParams.append('limit', rowsPerPage);
 
-            const response = await api.get(`${API_BASE_URL}/projects/${_id}/farmers?${queryParams.toString()}`);
+            const response = await api.get(`/projects/${_id}/farmers?${queryParams.toString()}`);
             const result = response.data;
             console.log(response);
 
@@ -148,7 +147,7 @@ const FarmerDetails = () => {
         } finally {
             setLoading(false);
         }
-    }, [_id, token, page, rowsPerPage, API_BASE_URL]);
+    }, [_id, token, page, rowsPerPage]);
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -214,7 +213,7 @@ const FarmerDetails = () => {
         }
     };
 
-    // Simulated upload function - replace with actual API call
+    // Simulated upload function - replace with actual API call with dynamic headers
     const handleUploadSubmit = async () => {
         if (!selectedFile) return;
         setUploading(true);

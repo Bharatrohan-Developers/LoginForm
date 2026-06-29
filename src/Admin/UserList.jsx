@@ -15,6 +15,7 @@ import {
     TextField,
     MenuItem,
     Stack,
+    InputAdornment,
     useTheme,
     useMediaQuery,
 } from "@mui/material";
@@ -28,6 +29,8 @@ import {
     Delete as DeleteIcon,
     Refresh as RefreshIcon,
     PersonAdd as PersonAddIcon,
+    Visibility,
+    VisibilityOff,
 } from "@mui/icons-material";
 
 import api from "../api/axiosConfig";
@@ -70,14 +73,16 @@ const UserList = () => {
         severity: "success",
     });
 
-    const API_BASE_URL = import.meta.env.VITE_URL;
+    // Password Visibility State
+    const [showAddPassword, setShowAddPassword] = useState(false);
+    const [showEditPassword, setShowEditPassword] = useState(false);
 
     // --- Actions ---
 
     const fetchUsers = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await api.get(`${API_BASE_URL}/admin/users`);
+            const response = await api.get("/admin/users");
             const userData = response.data.data || response.data;
             setUsers(userData);
             setError(null);
@@ -87,7 +92,7 @@ const UserList = () => {
         } finally {
             setLoading(false);
         }
-    }, [API_BASE_URL]);
+    }, []);
 
     useEffect(() => {
         fetchUsers();
@@ -102,7 +107,7 @@ const UserList = () => {
     const handleAddUserSubmit = async (e) => {
         e.preventDefault();
         try {
-            await api.post(`${API_BASE_URL}/admin/users`, formData);
+            await api.post("/admin/users", formData);
             showSnackbar("User added successfully");
             setAddUserOpen(false);
             setFormData({ name: "", email: "", password: "", role: "Agronomist" });
@@ -132,7 +137,7 @@ const UserList = () => {
             if (!payload.password) delete payload.password;
 
             // bhai check once this api request is correct or not
-            await api.patch(`${API_BASE_URL}/admin/users/${userToEditId}`, payload);
+            await api.patch(`/admin/users/${userToEditId}`, payload);
             showSnackbar("User updated successfully");
             setEditDialogOpen(false);
             fetchUsers();
@@ -144,7 +149,7 @@ const UserList = () => {
     // Delete Logic
     const handleDeleteConfirm = async () => {
         try {
-            await api.delete(`${API_BASE_URL}/admin/users/${userToDelete._id}`);
+            await api.delete(`/admin/users/${userToDelete._id}`);
             setUsers(users.filter((u) => u._id !== userToDelete._id));
             showSnackbar("User deleted successfully");
         } catch (err) {
@@ -232,7 +237,38 @@ const UserList = () => {
                         <Stack spacing={2.5} sx={{ mt: 1 }}>
                             <TextField label="Full Name" fullWidth required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
                             <TextField label="Email Address" type="email" fullWidth required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-                            <TextField label="Password" type="password" fullWidth required value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+                            <TextField
+                                label="Password"
+                                type={showAddPassword ? "text" : "password"}
+                                fullWidth
+                                required
+                                variant="outlined"
+                                value={formData.password}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, password: e.target.value })
+                                }
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                aria-label="toggle password visibility"
+                                                onClick={() =>
+                                                    setShowAddPassword((prev) => !prev)
+                                                }
+                                                onMouseDown={(e) => e.preventDefault()}
+                                                edge="end"
+                                                size="small"
+                                            >
+                                                {showAddPassword ? (
+                                                    <VisibilityOff />
+                                                ) : (
+                                                    <Visibility />
+                                                )}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
                             <TextField select label="Role" fullWidth required value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })}>
                                 <MenuItem value="Agronomist">Agronomist</MenuItem>
                                 <MenuItem value="Admin">Admin</MenuItem>
@@ -257,10 +293,25 @@ const UserList = () => {
                             <TextField label="Email Address" type="email" fullWidth required value={editFormData.email} onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })} />
                             <TextField
                                 label="New Password (Leave blank to keep current)"
-                                type="password"
+                                type={showEditPassword ? "text" : "password"}
                                 fullWidth
                                 value={editFormData.password}
                                 onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                aria-label="toggle password visibility"
+                                                onClick={() => setShowEditPassword(!showEditPassword)}
+                                                onMouseDown={(e) => e.preventDefault()}
+                                                edge="end"
+                                                size="small"
+                                            >
+                                                {showEditPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
                             />
                             <TextField select label="Role" fullWidth required value={editFormData.role} onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}>
                                 <MenuItem value="Agronomist">Agronomist</MenuItem>

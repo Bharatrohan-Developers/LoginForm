@@ -46,7 +46,7 @@ export default function AssignUsers() {
         const fetchUsers = async () => {
             setLoading(true);
             try {
-                const response = await api.get(`${import.meta.env.VITE_URL}/users`);
+                const response = await api.get("/users");
 
                 if (response.data.success) {
                     setMembers(response.data.data);
@@ -84,7 +84,7 @@ export default function AssignUsers() {
         setIsSaving(true);
         try {
             const response = await api.patch(
-                `${import.meta.env.VITE_URL}/projects/${projectId}/users`,
+                `/projects/${projectId}/users`,
                 {
                     "users": [...selectedIds]
                 }

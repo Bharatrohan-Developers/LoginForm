@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import {
     Container,
     Box,
@@ -11,16 +10,17 @@ import {
     Paper,
     Alert,
     CircularProgress,
-    IconButton,
     Breadcrumbs,
-    Link
+    Link,
+    useTheme
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon from '@mui/icons-material/Save';
-import api from '../api/axiosConfig'; // Ensure this path is correct based on your project structure
+import api from '../api/axiosConfig';
 
 const CreateProject = () => {
     const navigate = useNavigate();
+    const theme = useTheme();
     const token = localStorage.getItem('authToken');
 
     // Form State
@@ -38,6 +38,7 @@ const CreateProject = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        if (error) setError(null);
     };
 
     const handleSubmit = async (e) => {
@@ -47,12 +48,11 @@ const CreateProject = () => {
 
         try {
             const response = await api.post(
-                `${import.meta.env.VITE_URL}/projects`,
+                `/projects`,
                 formData
             );
             
             if (response.status === 201 || response.status === 200) {
-                // Redirect back to project list on success
                 navigate(`/projects/assign/${response.data.data._id}`);
             }
         } catch (err) {
@@ -69,16 +69,25 @@ const CreateProject = () => {
     return (
         <Container maxWidth="md" sx={{ py: 6 }}>
             {/* Breadcrumbs for Navigation */}
-            <Breadcrumbs sx={{ mb: 3 }}>
+            <Breadcrumbs sx={{ mb: 4 }}>
                 <Link
                     underline="hover"
-                    color="inherit"
+                    color={theme.palette.primary.main}
                     onClick={() => navigate('/dashboard')}
-                    sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    sx={{ 
+                        cursor: 'pointer', 
+                        display: 'flex', 
+                        alignItems: 'center',
+                        fontWeight: 500,
+                        transition: 'opacity 0.3s ease',
+                        '&:hover': { opacity: 0.8 }
+                    }}
                 >
                     <ArrowBackIcon sx={{ mr: 0.5, fontSize: 'inherit' }} /> My Projects
                 </Link>
-                <Typography color="text.primary">New Project</Typography>
+                <Typography color={theme.palette.text.primary} fontWeight={600}>
+                    New Project
+                </Typography>
             </Breadcrumbs>
 
             <form onSubmit={handleSubmit}>
@@ -87,9 +96,10 @@ const CreateProject = () => {
                     sx={{
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'center',
+                        alignItems: 'flex-start',
                         mb: 4,
-                        gap: 2
+                        gap: 2,
+                        flexDirection: { xs: 'column', sm: 'row' }
                     }}
                 >
                     <TextField
@@ -101,31 +111,65 @@ const CreateProject = () => {
                         value={formData.name}
                         onChange={handleChange}
                         placeholder="e.g. Rice Kharif 2025"
-                        sx={{ maxWidth: '70%' }}
+                        sx={{ 
+                            flex: 1,
+                            "& .MuiOutlinedInput-root": {
+                                borderRadius: 2,
+                            }
+                        }}
                     />
 
                     <Button
                         type="submit"
                         variant="contained"
+                        color="primary"
                         disabled={!isFormValid || loading}
-                        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                        startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <SaveIcon />}
                         sx={{
                             height: '56px',
-                            px: 4,
+                            px: 3,
                             borderRadius: 2,
                             textTransform: 'none',
-                            fontWeight: 'bold'
+                            fontWeight: 700,
+                            minWidth: { xs: '100%', sm: 150 },
+                            whiteSpace: 'nowrap',
                         }}
                     >
-                        {loading ? 'Creating...' : 'Create Project'}
+                        {loading ? 'Creating...' : 'Create'}
                     </Button>
                 </Box>
 
-                {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+                {error && (
+                    <Alert 
+                        severity="error" 
+                        sx={{ 
+                            mb: 3,
+                            borderRadius: 2,
+                        }}
+                        onClose={() => setError(null)}
+                    >
+                        {error}
+                    </Alert>
+                )}
 
                 {/* FORM BODY */}
-                <Paper sx={{ p: 4, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                    <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+                <Paper 
+                    sx={{ 
+                        p: 4, 
+                        borderRadius: 3, 
+                        boxShadow: `0 4px 20px ${theme.palette.primary.main}10`,
+                        backgroundColor: theme.palette.background.paper,
+                    }}
+                >
+                    <Typography 
+                        variant="h6" 
+                        gutterBottom 
+                        sx={{ 
+                            mb: 3, 
+                            fontWeight: 700,
+                            color: theme.palette.text.primary,
+                        }}
+                    >
                         Project Details
                     </Typography>
 
@@ -139,18 +183,28 @@ const CreateProject = () => {
                                 value={formData.crop}
                                 onChange={handleChange}
                                 placeholder="e.g. Rice"
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 2,
+                                    }
+                                }}
                             />
                         </Grid>
                         <Grid item xs={12} sm={6}>
                             <TextField
-
+                                label="Start Date"
                                 name="startDate"
                                 type="date"
                                 fullWidth
                                 required
-                                InputLabelProps={{ shrink: true }}
+                                
                                 value={formData.startDate}
                                 onChange={handleChange}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 2,
+                                    }
+                                }}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -163,6 +217,11 @@ const CreateProject = () => {
                                 onChange={handleChange}
                                 placeholder="e.g. Haryana, India"
                                 helperText="City, State or Region"
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 2,
+                                    }
+                                }}
                             />
                         </Grid>
                     </Grid>

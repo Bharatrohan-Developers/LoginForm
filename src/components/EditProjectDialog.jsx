@@ -7,18 +7,21 @@ import {
     TextField,
     Button,
     Grid,
-    CircularProgress
+    CircularProgress,
+    useTheme
 } from '@mui/material';
 
-import api from '../api/axiosConfig'; // Ensure this path is correct based on your project structure
+import api from '../api/axiosConfig';
 
 const EditProjectDialog = ({ open, onClose, project, onUpdate }) => {
+    const theme = useTheme();
     const [formData, setFormData] = useState({
         name: '',
         crop: '',
         location: ''
     });
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     // Sync form data when the project prop changes
     useEffect(() => {
@@ -28,45 +31,66 @@ const EditProjectDialog = ({ open, onClose, project, onUpdate }) => {
                 crop: project.crop || '',
                 location: project.location || ''
             });
+            setError('');
         }
-    }, [project]);
+    }, [project, open]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        if (error) setError('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        const token = localStorage.getItem('authToken');
+        setError('');
 
         try {
-            // Using your VITE_URL or a dummy URL
             const response = await api.patch(
-                `${import.meta.env.VITE_URL}/projects/${project._id}`,
+                `/projects/${project._id}`,
                 formData
             );
 
             if (response.data) {
-                // Update the local state in the parent component
                 onUpdate(response.data.data || { ...project, ...formData });
                 onClose();
             }
         } catch (error) {
             console.error("Update failed:", error);
-            alert("Failed to update project. Please try again.");
+            setError(error.response?.data?.message || "Failed to update project. Please try again.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>Edit Project</DialogTitle>
+        <Dialog 
+            open={open} 
+            onClose={onClose} 
+            fullWidth 
+            maxWidth="sm"
+            PaperProps={{
+                sx: {
+                    borderRadius: 2,
+                    boxShadow: `0 12px 32px ${theme.palette.primary.main}20`,
+                }
+            }}
+        >
+            <DialogTitle
+                sx={{
+                    fontWeight: 700,
+                    fontSize: '1.25rem',
+                    color: theme.palette.text.primary,
+                    borderBottom: `1px solid ${theme.palette.text.primary}10`,
+                    pb: 2,
+                }}
+            >
+                Edit Project
+            </DialogTitle>
             <form onSubmit={handleSubmit}>
-                <DialogContent>
-                    <Grid container spacing={2} sx={{ mt: 1 }}>
+                <DialogContent sx={{ pt: 3 }}>
+                    <Grid container spacing={2.5}>
                         <Grid item xs={12}>
                             <TextField
                                 label="Project Name"
@@ -75,6 +99,12 @@ const EditProjectDialog = ({ open, onClose, project, onUpdate }) => {
                                 value={formData.name}
                                 onChange={handleChange}
                                 required
+                                placeholder="Enter project name"
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 2,
+                                    }
+                                }}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -85,6 +115,12 @@ const EditProjectDialog = ({ open, onClose, project, onUpdate }) => {
                                 value={formData.crop}
                                 onChange={handleChange}
                                 required
+                                placeholder="Enter crop type"
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 2,
+                                    }
+                                }}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -95,19 +131,46 @@ const EditProjectDialog = ({ open, onClose, project, onUpdate }) => {
                                 value={formData.location}
                                 onChange={handleChange}
                                 required
+                                placeholder="Enter location"
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 2,
+                                    }
+                                }}
                             />
                         </Grid>
                     </Grid>
                 </DialogContent>
-                <DialogActions sx={{ p: 3 }}>
-                    <Button onClick={onClose} color="inherit">Cancel</Button>
+                <DialogActions sx={{ p: 2.5, borderTop: `1px solid ${theme.palette.text.primary}10` }}>
+                    <Button 
+                        onClick={onClose}
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            color: theme.palette.text.secondary,
+                        }}
+                    >
+                        Cancel
+                    </Button>
                     <Button
                         type="submit"
                         variant="contained"
+                        color="primary"
                         disabled={loading}
-                        startIcon={loading && <CircularProgress size={20} />}
+                        sx={{
+                            minWidth: 120,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                        }}
                     >
-                        {loading ? 'Saving...' : 'Save Changes'}
+                        {loading ? (
+                            <>
+                                <CircularProgress size={18} sx={{ mr: 1 }} />
+                                Saving...
+                            </>
+                        ) : (
+                            'Save Changes'
+                        )}
                     </Button>
                 </DialogActions>
             </form>
