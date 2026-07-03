@@ -75,7 +75,10 @@ const UserList = () => {
 
     // Password Visibility State
     const [showAddPassword, setShowAddPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [showEditPassword, setShowEditPassword] = useState(false);
+
+    console.log(showEditPassword);
 
     // --- Actions ---
 
@@ -238,35 +241,25 @@ const UserList = () => {
                             <TextField label="Full Name" fullWidth required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
                             <TextField label="Email Address" type="email" fullWidth required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                             <TextField
+                                fullWidth
                                 label="Password"
                                 type={showAddPassword ? "text" : "password"}
-                                fullWidth
-                                required
-                                variant="outlined"
                                 value={formData.password}
                                 onChange={(e) =>
                                     setFormData({ ...formData, password: e.target.value })
                                 }
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                aria-label="toggle password visibility"
-                                                onClick={() =>
-                                                    setShowAddPassword((prev) => !prev)
-                                                }
-                                                onMouseDown={(e) => e.preventDefault()}
-                                                edge="end"
-                                                size="small"
-                                            >
-                                                {showAddPassword ? (
-                                                    <VisibilityOff />
-                                                ) : (
-                                                    <Visibility />
-                                                )}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
+                                slotProps={{
+                                    input: {
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    onClick={() => setShowAddPassword((prev) => !prev)}
+                                                >
+                                                    {showAddPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    },
                                 }}
                             />
                             <TextField select label="Role" fullWidth required value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })}>
@@ -291,26 +284,30 @@ const UserList = () => {
                         <Stack spacing={2.5} sx={{ mt: 1 }}>
                             <TextField label="Full Name" fullWidth required value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} />
                             <TextField label="Email Address" type="email" fullWidth required value={editFormData.email} onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })} />
+                            {/* Password Field */}
                             <TextField
-                                label="New Password (Leave blank to keep current)"
-                                type={showEditPassword ? "text" : "password"}
                                 fullWidth
+                                label="Password"
+                                type={showEditPassword ? "text" : "password"}
                                 value={editFormData.password}
-                                onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                aria-label="toggle password visibility"
-                                                onClick={() => setShowEditPassword(!showEditPassword)}
-                                                onMouseDown={(e) => e.preventDefault()}
-                                                edge="end"
-                                                size="small"
-                                            >
-                                                {showEditPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
+                                onChange={(e) =>
+                                    setEditFormData({
+                                        ...editFormData,
+                                        password: e.target.value,
+                                    })
+                                }
+                                slotProps={{
+                                    input: {
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    onClick={() => setShowEditPassword((prev) => !prev)}
+                                                >
+                                                    {showEditPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    },
                                 }}
                             />
                             <TextField select label="Role" fullWidth required value={editFormData.role} onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}>

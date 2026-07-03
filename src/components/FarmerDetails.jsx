@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import {
     Container, Typography, Box, CircularProgress, Alert, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Tooltip, TextField, InputAdornment,
@@ -27,6 +27,7 @@ import {
     Clear as ClearIcon,
     Campaign as CampaignIcon,
     Visibility as ViewIcon,
+    Add as AddIcon,
 } from '@mui/icons-material';
 import TablePagination from '@mui/material/TablePagination';
 import AdvisoryGenerator from './advisory/AdvisoryGenerator';
@@ -50,7 +51,9 @@ const FarmerDetails = () => {
     const location = useLocation();
     const token = localStorage.getItem('authToken');
     const role = localStorage.getItem('role');
-    const surveyCount = location?.state?.surveyCount || 0;
+    const [surveyCount, setSurveyCount] = useState(
+        location?.state?.surveyCount || 0
+    );
 
     // Table State
     const [page, setPage] = useState(0);
@@ -72,6 +75,12 @@ const FarmerDetails = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState(null);
+    const [csvErrors, setCsvErrors] = useState([]);
+    const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+    const firstLoad = useRef(true);
+
+    const [addSurveyOpen, setAddSurveyOpen] = useState(false);
+    const [surveyData, setSurveyData] = useState("");
 
     const [columns, setColumns] = useState([
         { id: '_id', label: 'ID', visible: true },
@@ -117,16 +126,25 @@ const FarmerDetails = () => {
     const fetchFarmers = useCallback(async (currentFilters) => {
         if (!_id) return;
         setLoading(true);
+        setError(null);
         try {
             const queryParams = new URLSearchParams();
 
 
-            Object.keys(currentFilters).forEach(key => {
-                const value = currentFilters[key];
-                if (value && value !== 'all') {
-                    const apiKey = key === 'survey' ? 'surveyNumber' : key;
-                    queryParams.append(apiKey, value);
-                }
+            Object.entries(currentFilters).forEach(([key, value]) => {
+                const filterValue =
+                    typeof value === "string"
+                        ? value.trim()
+                        : value;
+
+                if (!filterValue || filterValue === "all") return;
+
+                const apiKey =
+                    key === "survey"
+                        ? "surveyNumber"
+                        : key;
+
+                queryParams.append(apiKey, filterValue);
             });
 
             queryParams.append('page', page + 1);
@@ -138,28 +156,55 @@ const FarmerDetails = () => {
 
             if (result.success) {
                 setFarmers(result.data || []);
-                setTotalRecords(result.pagination?.totalRecords || result.count || 0);
+                // Use the total number of records returned by the backend
+                setTotalRecords(result.pagination?.total ?? 0);
+
+                setError(null);
             } else {
+                setFarmers([]);
+                setTotalRecords(0);
                 setError(result.message || "Failed to load data");
             }
         } catch (err) {
-            setError('Error connecting to the server');
+            console.error(err);
+            setFarmers([]);
+            setTotalRecords(0);
+
+            setError(
+                err.response?.data?.message ||
+                "Error connecting to the server"
+            );
         } finally {
             setLoading(false);
         }
-    }, [_id, token, page, rowsPerPage]);
+    }, [_id, page, rowsPerPage]);
 
     useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
+        if (firstLoad.current) {
+            firstLoad.current = false;
+            fetchFarmers(filters);
+            return;
+        }
+
+        const timer = setTimeout(() => {
             fetchFarmers(filters);
         }, 500);
-        return () => clearTimeout(delayDebounceFn);
-    }, [filters, fetchFarmers]);
+
+        return () => clearTimeout(timer);
+    }, [filters, page, rowsPerPage]);
+
 
     // --- HANDLERS ---
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
+
+        setFilters(prev => ({
+            ...prev,
+            [name]: typeof value === "string"
+                ? value.trimStart()
+                : value,
+        }));
+
         setPage(0);
     };
 
@@ -203,42 +248,98 @@ const FarmerDetails = () => {
         setSelectedFile(null);
     };
 
+    // Handle file selection and validate CSV format
     const handleFileChange = (event) => {
         const file = event.target.files[0];
-        if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+        if (file && (file.name.endsWith('.csv'))) {
             setSelectedFile(file);
             setUploadStatus(null);
         } else {
-            setUploadStatus({ type: 'error', message: 'Please upload a CSV or Excel file.' });
+            setUploadStatus({ type: 'error', message: 'Please upload a CSV  file.' });
         }
     };
 
     // Simulated upload function - replace with actual API call with dynamic headers
     const handleUploadSubmit = async () => {
         if (!selectedFile) return;
+
         setUploading(true);
+        setUploadStatus(null);
+
         try {
-            console.log("Uploading file:", selectedFile);
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            setUploadStatus({ type: 'success', message: 'File uploaded successfully!' });
+            const formData = new FormData();
+            formData.append("file", selectedFile); // Change "file" if backend expects another key
+
+            const response = await api.post(
+                `/projects/${_id}/farmers/upload`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+
+            setUploadStatus({
+                type: "success",
+                message: response.data.message || "CSV uploaded successfully.",
+            });
+
             setSelectedFile(null);
             fetchFarmers(filters);
         } catch (error) {
-            setUploadStatus({ type: 'error', message: 'Upload failed.' });
+            const response = error.response?.data;
+            // Close Upload Dialog
+            setUploadModalOpen(false);
+            // Clear selected file
+            setSelectedFile(null);
+
+
+            setUploadStatus({
+                type: "error",
+                message: response?.message,
+            });
+
+            setCsvErrors(response?.errors || []);
+            setErrorDialogOpen(true);
         } finally {
             setUploading(false);
         }
     };
 
+    // Function to handle previewing advisory details of farmer
     const handlePreviewAdvisory = (farmer) => {
-        if (farmer.advisoryUrl) {
-            window.open(farmer.advisoryUrl, '_blank');
-        } else {
-            // Logic to open your preview modal or fetch the advisory content
-            console.log("Previewing advisory for:", farmer.name);
-            alert("Opening preview for " + farmer.name);
+        alert(
+            `Recommendation: ${farmer.advisory.recommendation}\n\nQuantity: ${farmer.advisory.quantity}`
+        );
+    };
+
+    const handleOpenAddSurvey = () => {
+        setAddSurveyOpen(true);
+    };
+
+    const handleCloseAddSurvey = () => {
+        setAddSurveyOpen(false);
+        setSurveyData("");
+    };
+
+    const handleAddSurveySubmit = async () => {
+        try {
+            const res = await api.patch(`/projects/${_id}/survey-count`);
+
+            // update local survey count
+            setSurveyCount(res.data.data.surveyCount);
+
+            // refresh farmer list
+            await fetchFarmers(filters);
+
+            handleCloseAddSurvey();
+        } catch (err) {
+            console.error(err);
+            alert("Failed to add survey");
         }
     };
+
 
     return (
         <Container maxWidth={false} sx={{ mt: 4, mb: 4 }}>
@@ -248,17 +349,35 @@ const FarmerDetails = () => {
             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <TextField
-                        select size="small" label="Filter by Survey"
-                        name="survey" value={filters.survey} onChange={handleFilterChange}
+                        select size="small"
+                        label="Filter by Survey"
+                        name="survey"
+                        value={filters.survey}
+                        onChange={handleFilterChange}
                         sx={{ minWidth: 200, bgcolor: 'white' }}
                     >
                         <MenuItem value="all">All Surveys</MenuItem>
                         {[...Array(surveyCount).keys()].map(num => (
                             <MenuItem key={num + 1} value={`${num + 1}`}>Survey {num + 1}</MenuItem>
                         ))}
+
+                        {/* Updated Add Survey Trigger */}
+                        {role === "Remote Sensing Manager" && (
+                            <Box sx={{ p: 1, borderTop: '1px solid #eee' }}>
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    size="small"
+                                    startIcon={<AddIcon />}
+                                    onClick={handleOpenAddSurvey}
+                                >
+                                    Add Survey
+                                </Button>
+                            </Box>
+                        )}
                     </TextField>
 
-                    {(role === 'admin' || role === 'Remote Sensing Manager') && (
+                    {(role === 'Admin' || role === 'Remote Sensing Manager') && (
                         <>
                             <Divider orientation="vertical" flexItem sx={{ mx: 1, height: 30, alignSelf: 'center' }} />
                             <Tooltip title="View All Markers"><IconButton sx={{ bgcolor: 'white', border: '1px solid #ddd' }}><ViewMapIcon color="secondary" /></IconButton></Tooltip>
@@ -270,11 +389,21 @@ const FarmerDetails = () => {
                 {selectedItems.length > 0 && (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, bgcolor: '#e3f2fd', px: 2, py: 0.5, borderRadius: 2, border: '1px solid #2196f3' }}>
                         <Typography variant="body2" fontWeight="bold" color="primary.main">{selectedItems.length} Selected</Typography>
-                        <Tooltip title="Bulk action advisory"><IconButton color="primary" size="small"><CampaignIcon /></IconButton></Tooltip>
+                        <Tooltip title="Bulk action advisory" onClick={() => console.log("Bulk action advisory for:", selectedItems)}>
+                            <IconButton color="primary" size="small">
+                                <CampaignIcon />
+                            </IconButton>
+                        </Tooltip>
                         <Button size="small" onClick={() => setSelectedItems([])}>Clear</Button>
                     </Box>
                 )}
             </Box>
+
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
+            )}
 
             <Paper sx={{ boxShadow: 4, borderRadius: '8px', overflow: 'hidden' }}>
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#fff', borderBottom: '1px solid #eee' }}>
@@ -384,25 +513,22 @@ const FarmerDetails = () => {
                                                     <Tooltip title="View Map"><IconButton color="secondary" size="small" onClick={() => handleOpenPrescriptionMap(farmer._id)}><MapIcon fontSize="small" /></IconButton></Tooltip>
                                                 </TableCell>
                                             );
-                                            if (col.id === 'advisory') {
-                                                // Check if advisory and fileUrl exist in the farmer object
-                                                const hasAdvisory = farmer.advisory && farmer.advisory.fileUrl;
+                                            if (col.id === "advisory") {
+                                                const hasAdvisory = !!farmer.advisory;
 
                                                 return (
                                                     <TableCell key={col.id} align="center">
                                                         {hasAdvisory ? (
-                                                            // IF ADVISORY EXISTS: Show Preview Button
-                                                            <Tooltip title="Preview Advisory">
+                                                            <Tooltip title="View Advisory">
                                                                 <IconButton
                                                                     color="success"
                                                                     size="small"
-                                                                    onClick={() => window.open(farmer.advisory.fileUrl, '_blank')}
+                                                                    onClick={() => handlePreviewAdvisory(farmer)}
                                                                 >
-                                                                    <PreviewIcon fontSize="small" />
+                                                                    <ViewIcon fontSize="small" />
                                                                 </IconButton>
                                                             </Tooltip>
                                                         ) : (
-                                                            // IF ADVISORY MISSING: Show Upload Button (Existing logic)
                                                             <Tooltip title="Upload Advisory">
                                                                 <IconButton
                                                                     color="info"
@@ -442,13 +568,14 @@ const FarmerDetails = () => {
 
 
             <Dialog open={uploadModalOpen} onClose={() => !uploading && setUploadModalOpen(false)} maxWidth="sm" fullWidth>
+
                 <DialogTitle sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}><BulkUploadIcon color="primary" /> Bulk Farmer Upload</DialogTitle>
                 <DialogContent dividers>
                     <Box
                         sx={{ border: '2px dashed #ccc', borderRadius: 2, p: 4, textAlign: 'center', bgcolor: '#fafafa', cursor: 'pointer', '&:hover': { bgcolor: '#f0f0f0', borderColor: 'primary.main' } }}
                         onClick={() => document.getElementById('bulk-file-input').click()}
                     >
-                        <input type="file" id="bulk-file-input" hidden accept=".csv, .xlsx, .xls" onChange={handleFileChange} />
+                        <input type="file" id="bulk-file-input" hidden accept=".csv" onChange={handleFileChange} />
                         <BulkUploadIcon sx={{ fontSize: 40, color: '#999', mb: 1 }} />
                         <Typography variant="subtitle1" fontWeight="medium">{selectedFile ? selectedFile.name : "Click to select or drag and drop"}</Typography>
                     </Box>
@@ -460,6 +587,77 @@ const FarmerDetails = () => {
                     <Button variant="contained" onClick={handleUploadSubmit} disabled={!selectedFile || uploading}>Upload Now</Button>
                 </DialogActions>
             </Dialog>
+
+            {/* ADD SURVEY DIALOG */}
+            <Dialog
+                open={addSurveyOpen}
+                onClose={handleCloseAddSurvey}
+                maxWidth="xs"
+                fullWidth
+            >
+                <DialogTitle sx={{ fontWeight: 'bold' }}>Create New Survey</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+                        <TextField
+                            label="New Survey Number"
+                            value={surveyCount + 1}
+                            disabled
+                            fullWidth
+                            helperText="This number is automatically assigned"
+                        />
+                        {/* <TextField
+                            label="Survey Date"
+                            type="date"
+                            value={surveyData}
+                            onChange={(e) => setSurveyData(e.target.value)}
+                            fullWidth
+                            InputLabelProps={{ shrink: true }}
+                        /> */}
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ p: 2 }}>
+                    <Button onClick={handleCloseAddSurvey} color="inherit">Cancel</Button>
+                    <Button
+                        onClick={handleAddSurveySubmit}
+                        variant="contained"
+                    // disabled={!surveyData.trim()}
+                    >
+                        Confirm & Submit
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={errorDialogOpen}
+                onClose={() => setErrorDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>
+                    CSV Validation Errors
+                </DialogTitle>
+
+                <DialogContent dividers>
+                    {csvErrors.slice(0, 4).map((item) => (
+                        <Alert severity="error" sx={{ mb: 1 }} key={item.row}>
+                            <strong>Row {item.row}</strong>: {item.errors.join(", ")}
+                        </Alert>
+                    ))}
+
+                    {csvErrors.length > 4 && (
+                        <Typography sx={{ mt: 2 }}>
+                            ...and {csvErrors.length - 4} more errors.
+                        </Typography>
+                    )}
+                </DialogContent>
+
+                <DialogActions>
+                    <Button onClick={() => setErrorDialogOpen(false)}>
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
 
             {/* ADVISORY COMPONENT */}
             <AdvisoryGenerator

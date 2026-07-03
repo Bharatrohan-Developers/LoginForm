@@ -8,6 +8,13 @@ const ProjectCard = ({ project, onEdit, canEdit }) => {
   const theme = useTheme();
   const role = localStorage.getItem('role');
 
+  // Helper to format location string cleanly
+  const formatLocation = () => {
+    const { village, district, state } = project;
+    // Filter out any undefined/null values and join with commas
+    return [village, district, state].filter(Boolean).join(', ') || 'No location set';
+  };
+
   const renderAgronomistList = () => {
     const agronomists = project.assignedAgronomists;
     if (!agronomists || agronomists.length === 0) return "No agronomists assigned";
@@ -94,10 +101,10 @@ const ProjectCard = ({ project, onEdit, canEdit }) => {
 
       {/* Card Content */}
       <CardContent sx={{ flexGrow: 1, pb: 1.5 }}>
-        <Typography 
-          gutterBottom 
-          variant="h6" 
-          component="div" 
+        <Typography
+          gutterBottom
+          variant="h6"
+          component="div"
           fontWeight={700}
           sx={{
             color: theme.palette.text.primary,
@@ -108,8 +115,8 @@ const ProjectCard = ({ project, onEdit, canEdit }) => {
           {project.name}
         </Typography>
 
-        <Typography 
-          variant="body2" 
+        <Typography
+          variant="body2"
           sx={{
             color: theme.palette.text.secondary,
             mb: 0.8,
@@ -119,15 +126,21 @@ const ProjectCard = ({ project, onEdit, canEdit }) => {
           <strong style={{ fontWeight: 600 }}>Crop:</strong> {project.crop}
         </Typography>
 
-        <Typography 
-          variant="body2" 
+        {/* Updated Location Display */}
+        <Typography
+          variant="body2"
           sx={{
             color: theme.palette.text.secondary,
             mb: 2,
             fontSize: '0.9rem',
+            // Added to handle long location strings
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
           }}
         >
-          <strong style={{ fontWeight: 600 }}>Location:</strong> {project.location}
+          <strong style={{ fontWeight: 600 }}>Location:</strong> {formatLocation()}
         </Typography>
       </CardContent>
 

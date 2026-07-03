@@ -119,7 +119,7 @@ const LoginForm = () => {
               mb: 1,
             }}
           >
-            BharatRohan
+            Live Prescription Map
           </Typography>
 
           <Typography
@@ -294,7 +294,7 @@ const LoginForm = () => {
           </Button>
 
           {/* Request Access Button */}
-          <Button
+          {/* <Button
             fullWidth
             variant="contained"
             color="secondary"
@@ -312,7 +312,7 @@ const LoginForm = () => {
             }}
           >
             Request Access
-          </Button>
+          </Button> */}
         </Box>
 
         {/* Footer */}
@@ -327,7 +327,7 @@ const LoginForm = () => {
             textAlign: "center",
           }}
         >
-          © {new Date().getFullYear()} BharatRohan Airborne Innovations Pvt. Ltd.
+          © {new Date().getFullYear()} BharatRohan Airborne Innovations Ltd.
         </Typography>
       </Paper>
     </Box>
