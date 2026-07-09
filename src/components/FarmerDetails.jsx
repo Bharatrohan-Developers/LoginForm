@@ -82,6 +82,9 @@ const FarmerDetails = () => {
     const [addSurveyOpen, setAddSurveyOpen] = useState(false);
     const [surveyData, setSurveyData] = useState("");
 
+    const [bulkAdvisoryOpen, setBulkAdvisoryOpen] = useState(false);
+    const [selectedBulkFarmers, setSelectedBulkFarmers] = useState([]);
+
     const [columns, setColumns] = useState([
         { id: '_id', label: 'ID', visible: true },
         { id: 'name', label: 'Farmer Name', visible: true },
@@ -309,9 +312,8 @@ const FarmerDetails = () => {
 
     // Function to handle previewing advisory details of farmer
     const handlePreviewAdvisory = (farmer) => {
-        alert(
-            `Recommendation: ${farmer.advisory.recommendation}\n\nQuantity: ${farmer.advisory.quantity}`
-        );
+        console.log("Previewing advisory for farmer:", farmer.advisory.url);
+        return window.open(farmer.advisory.url, "_blank");
     };
 
     const handleOpenAddSurvey = () => {
@@ -340,9 +342,24 @@ const FarmerDetails = () => {
         }
     };
 
+    const handleBulkActionAdvisory = () => {
+        if (filters.survey === "all") {
+            alert("Please select survey");
+            return;
+        }
+
+        const bulkFarmers = farmers.filter(f =>
+            selectedItems.includes(f._id)
+        );
+
+        setSelectedBulkFarmers(bulkFarmers);
+
+        setBulkAdvisoryOpen(true);
+    };
+
 
     return (
-        <Container maxWidth={false} sx={{ mt: 4, mb: 4 }}>
+        <Container maxWidth={false} sx={{ mt: 1, mb: 4 }}>
             <Typography variant="h4" fontWeight="bold" sx={{ mb: 3 }}>Farmer Management</Typography>
 
             {/* TOP ACTION BAR */}
@@ -389,8 +406,12 @@ const FarmerDetails = () => {
                 {selectedItems.length > 0 && (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, bgcolor: '#e3f2fd', px: 2, py: 0.5, borderRadius: 2, border: '1px solid #2196f3' }}>
                         <Typography variant="body2" fontWeight="bold" color="primary.main">{selectedItems.length} Selected</Typography>
-                        <Tooltip title="Bulk action advisory" onClick={() => console.log("Bulk action advisory for:", selectedItems)}>
-                            <IconButton color="primary" size="small">
+                        <Tooltip title="Bulk action advisory">
+                            <IconButton
+                                color="primary"
+                                size="small"
+                                onClick={handleBulkActionAdvisory}
+                            >
                                 <CampaignIcon />
                             </IconButton>
                         </Tooltip>
@@ -663,7 +684,19 @@ const FarmerDetails = () => {
             <AdvisoryGenerator
                 open={advisoryOpen}
                 onClose={() => setAdvisoryOpen(false)}
+                farmer={selectedFarmer}
                 farmerName={selectedFarmer?.name}
+                projectId={_id}
+                surveyNumber={filters.survey}
+            />
+            <AdvisoryGenerator
+                open={bulkAdvisoryOpen}
+                onClose={() => setBulkAdvisoryOpen(false)}
+                farmers={selectedBulkFarmers}
+                farmerName={selectedFarmer?.name}
+                projectId={_id}
+                surveyNumber={filters.survey}
+                isBulk={true}
             />
         </Container>
     );

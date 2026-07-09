@@ -27,7 +27,15 @@ import {
 
 import api from "../../api/axiosConfig"; // Ensure this path is correct based on your project structure
 
-const AdvisoryGenerator = ({ open, onClose, farmerName }) => {
+const AdvisoryGenerator = ({
+    open,
+    onClose,
+    farmer,
+    farmers = [],
+    farmerName = "All Farmers",
+    projectId,
+    surveyNumber,
+    isBulk = false, }) => {
     const [form, setForm] = useState({
         observation: "हमारे सर्वेक्षण के अनुसार, आपकी फ़सल में पीला रतुआ के लक्षण दिखाई दे रहे हैं, जिसे पीले रंग से दर्शाया गया है।",
         solution: "कृपया अपनी फ़सल के उपचार के लिए प्रोपिकोनाज़ोल 25% EC 200 ml/Acre 150 लीटर पानी के साथ मिलाकर स्प्रे विधि से छिड़काव करें।",
@@ -85,6 +93,7 @@ const AdvisoryGenerator = ({ open, onClose, farmerName }) => {
         try {
             setIsSaving(true);
 
+            // Generate image
             const canvas = await html2canvas(templateRef.current, {
                 scale: 3,
                 useCORS: true,
@@ -96,34 +105,50 @@ const AdvisoryGenerator = ({ open, onClose, farmerName }) => {
 
             const formData = new FormData();
 
+            // Required image
             formData.append(
                 "image",
                 blob,
-                `Advisory_${farmerName || "Farmer"}.png`
+                `Advisory_${farmerName}.png`
             );
 
-            formData.append("farmerName", farmerName);
-            formData.append("observation", form.observation);
-            formData.append("solution", form.solution);
+            // Required text
+            formData.append(
+                "text",
+                `${form.observation}\n\n${form.solution}`
+            );
+
+            // Required ids[]
+            if (isBulk) {
+                farmers.forEach(item => {
+                    formData.append("farmerIds", item._id);
+                });
+            } else {
+                formData.append("farmerId", farmer._id);
+            }
 
             const response = await api.post(
-                "https://crudcrud.com/api/c5a1ddea9bff4d8e9367316a05939cc7/dummy",
+                `/projects/${projectId}/surveys/${surveyNumber}/advisories`,
                 formData,
                 {
                     headers: {
-                        "Content-Type": "multipart/form-data"
-                    }
+                        "Content-Type": "multipart/form-data",
+                    },
                 }
             );
 
-            const data = await response.json();
+            console.log("Advisory upload response:", response.data);
 
-            console.log("Saved", data);
+            alert(response.data.message || "Advisory uploaded successfully");
 
-            alert("Advisory saved successfully");
-        } catch (error) {
-            console.error(error);
-            alert("Failed to save advisory");
+            onClose();
+        } catch (err) {
+            console.error(err);
+
+            alert(
+                err.response?.data?.message ||
+                "Failed to upload advisory"
+            );
         } finally {
             setIsSaving(false);
         }
