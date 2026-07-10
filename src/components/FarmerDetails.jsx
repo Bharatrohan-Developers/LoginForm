@@ -31,7 +31,7 @@ import {
 } from '@mui/icons-material';
 import TablePagination from '@mui/material/TablePagination';
 import AdvisoryGenerator from './advisory/AdvisoryGenerator';
-import api from '../api/axiosConfig'; // Ensure this path is correct based on your project structure
+import api from '../api/axiosConfig';
 
 // --- CUSTOM PAGINATION ACTIONS ---
 function TablePaginationActions(props) {
@@ -49,11 +49,8 @@ function TablePaginationActions(props) {
 const FarmerDetails = () => {
     const { _id } = useParams();
     const location = useLocation();
-    const token = localStorage.getItem('authToken');
     const role = localStorage.getItem('role');
-    const [surveyCount, setSurveyCount] = useState(
-        location?.state?.surveyCount || 0
-    );
+    const [surveyCount, setSurveyCount] = useState(location?.state?.surveyCount || 0);
 
     // Table State
     const [page, setPage] = useState(0);
@@ -80,13 +77,12 @@ const FarmerDetails = () => {
     const firstLoad = useRef(true);
 
     const [addSurveyOpen, setAddSurveyOpen] = useState(false);
-    const [surveyData, setSurveyData] = useState("");
-
     const [bulkAdvisoryOpen, setBulkAdvisoryOpen] = useState(false);
     const [selectedBulkFarmers, setSelectedBulkFarmers] = useState([]);
+    const [selectedFarmerMap, setSelectedFarmerMap] = useState({});
 
+    // 1. REMOVED _id FROM COLUMNS
     const [columns, setColumns] = useState([
-        { id: '_id', label: 'ID', visible: true },
         { id: 'name', label: 'Farmer Name', visible: true },
         { id: 'contactNumber', label: 'Contact No.', visible: true },
         { id: 'village', label: 'Village', visible: true },
@@ -103,14 +99,9 @@ const FarmerDetails = () => {
         name: '', contactNumber: '', village: '', district: '', state: '', survey: 'all'
     });
 
-
-    // --- DYNAMIC COLUMN LOGIC ---
-    // This creates a filtered list of columns based on the Survey selection
     const displayColumns = useMemo(() => {
         return columns.filter(col => {
             if (!col.visible) return false;
-
-            // Hide "Prescription Map" and "Advisory" unless a specific survey is selected
             if (['prescription', 'advisory'].includes(col.id)) {
                 return filters.survey !== 'all';
             }
@@ -118,35 +109,21 @@ const FarmerDetails = () => {
         });
     }, [columns, filters.survey]);
 
-
-    // Check if any filter is active
     const isFiltering = Object.entries(filters).some(([key, value]) => {
         if (key === 'survey') return value !== 'all';
         return value !== '';
     });
 
-    // --- FETCH DATA ---
     const fetchFarmers = useCallback(async (currentFilters) => {
         if (!_id) return;
         setLoading(true);
         setError(null);
         try {
             const queryParams = new URLSearchParams();
-
-
             Object.entries(currentFilters).forEach(([key, value]) => {
-                const filterValue =
-                    typeof value === "string"
-                        ? value.trim()
-                        : value;
-
+                const filterValue = typeof value === "string" ? value.trim() : value;
                 if (!filterValue || filterValue === "all") return;
-
-                const apiKey =
-                    key === "survey"
-                        ? "surveyNumber"
-                        : key;
-
+                const apiKey = key === "survey" ? "surveyNumber" : key;
                 queryParams.append(apiKey, filterValue);
             });
 
@@ -155,28 +132,19 @@ const FarmerDetails = () => {
 
             const response = await api.get(`/projects/${_id}/farmers?${queryParams.toString()}`);
             const result = response.data;
-            console.log(response);
 
             if (result.success) {
                 setFarmers(result.data || []);
-                // Use the total number of records returned by the backend
                 setTotalRecords(result.pagination?.total ?? 0);
-
-                setError(null);
             } else {
                 setFarmers([]);
                 setTotalRecords(0);
                 setError(result.message || "Failed to load data");
             }
         } catch (err) {
-            console.error(err);
             setFarmers([]);
             setTotalRecords(0);
-
-            setError(
-                err.response?.data?.message ||
-                "Error connecting to the server"
-            );
+            setError(err.response?.data?.message || "Error connecting to the server");
         } finally {
             setLoading(false);
         }
@@ -188,26 +156,13 @@ const FarmerDetails = () => {
             fetchFarmers(filters);
             return;
         }
-
-        const timer = setTimeout(() => {
-            fetchFarmers(filters);
-        }, 500);
-
+        const timer = setTimeout(() => { fetchFarmers(filters); }, 500);
         return () => clearTimeout(timer);
     }, [filters, page, rowsPerPage]);
 
-
-    // --- HANDLERS ---
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
-
-        setFilters(prev => ({
-            ...prev,
-            [name]: typeof value === "string"
-                ? value.trimStart()
-                : value,
-        }));
-
+        setFilters(prev => ({ ...prev, [name]: typeof value === "string" ? value.trimStart() : value }));
         setPage(0);
     };
 
@@ -230,8 +185,23 @@ const FarmerDetails = () => {
         }
     };
 
-    const handleSelectItem = (id) => {
-        setSelectedItems((prev) => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+    const handleSelectItem = (farmer) => {
+        setSelectedItems(prev =>
+            prev.includes(farmer._id)
+                ? prev.filter(id => id !== farmer._id)
+                : [...prev, farmer._id]
+        );
+
+        setSelectedFarmerMap(prev => {
+            const copy = { ...prev };
+            if (copy[farmer._id]) {
+                delete copy[farmer._id];
+            } else {
+                copy[farmer._id] = farmer;
+            }
+
+            return copy;
+        });
     };
 
     const isSelected = (id) => selectedItems.indexOf(id) !== -1;
@@ -239,6 +209,7 @@ const FarmerDetails = () => {
     const isSomeSelectedOnPage = farmers.some(f => selectedItems.includes(f._id)) && !isAllSelectedOnPage;
 
     const handleOpenPrescriptionMap = (id) => alert("Opening Map for ID: " + id);
+
     const handleUploadAdvisory = (id) => {
         const farmer = farmers.find(f => f._id === id);
         setSelectedFarmer(farmer);
@@ -251,58 +222,34 @@ const FarmerDetails = () => {
         setSelectedFile(null);
     };
 
-    // Handle file selection and validate CSV format
     const handleFileChange = (event) => {
         const file = event.target.files[0];
         if (file && (file.name.endsWith('.csv'))) {
             setSelectedFile(file);
             setUploadStatus(null);
         } else {
-            setUploadStatus({ type: 'error', message: 'Please upload a CSV  file.' });
+            setUploadStatus({ type: 'error', message: 'Please upload a CSV file.' });
         }
     };
 
-    // Simulated upload function - replace with actual API call with dynamic headers
     const handleUploadSubmit = async () => {
         if (!selectedFile) return;
-
         setUploading(true);
         setUploadStatus(null);
-
         try {
             const formData = new FormData();
-            formData.append("file", selectedFile); // Change "file" if backend expects another key
-
-            const response = await api.post(
-                `/projects/${_id}/farmers/upload`,
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                }
-            );
-
-            setUploadStatus({
-                type: "success",
-                message: response.data.message || "CSV uploaded successfully.",
+            formData.append("file", selectedFile);
+            const response = await api.post(`/projects/${_id}/farmers/upload`, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
             });
-
+            setUploadStatus({ type: "success", message: response.data.message || "CSV uploaded successfully." });
             setSelectedFile(null);
             fetchFarmers(filters);
         } catch (error) {
             const response = error.response?.data;
-            // Close Upload Dialog
             setUploadModalOpen(false);
-            // Clear selected file
             setSelectedFile(null);
-
-
-            setUploadStatus({
-                type: "error",
-                message: response?.message,
-            });
-
+            setUploadStatus({ type: "error", message: response?.message });
             setCsvErrors(response?.errors || []);
             setErrorDialogOpen(true);
         } finally {
@@ -310,34 +257,20 @@ const FarmerDetails = () => {
         }
     };
 
-    // Function to handle previewing advisory details of farmer
     const handlePreviewAdvisory = (farmer) => {
-        console.log("Previewing advisory for farmer:", farmer.advisory.url);
         return window.open(farmer.advisory.url, "_blank");
     };
 
-    const handleOpenAddSurvey = () => {
-        setAddSurveyOpen(true);
-    };
-
-    const handleCloseAddSurvey = () => {
-        setAddSurveyOpen(false);
-        setSurveyData("");
-    };
+    const handleOpenAddSurvey = () => setAddSurveyOpen(true);
+    const handleCloseAddSurvey = () => setAddSurveyOpen(false);
 
     const handleAddSurveySubmit = async () => {
         try {
             const res = await api.patch(`/projects/${_id}/survey-count`);
-
-            // update local survey count
             setSurveyCount(res.data.data.surveyCount);
-
-            // refresh farmer list
             await fetchFarmers(filters);
-
             handleCloseAddSurvey();
         } catch (err) {
-            console.error(err);
             alert("Failed to add survey");
         }
     };
@@ -348,15 +281,20 @@ const FarmerDetails = () => {
             return;
         }
 
-        const bulkFarmers = farmers.filter(f =>
-            selectedItems.includes(f._id)
-        );
+        const bulkFarmers = Object.values(selectedFarmerMap);
 
         setSelectedBulkFarmers(bulkFarmers);
-
         setBulkAdvisoryOpen(true);
     };
 
+    const handleBulkAdvisorySuccess = () => {
+        setSelectedItems([]);
+        setSelectedFarmerMap({});
+        setSelectedBulkFarmers([]);
+        setBulkAdvisoryOpen(false);
+
+        fetchFarmers(filters);
+    };
 
     return (
         <Container maxWidth={false} sx={{ mt: 1, mb: 4 }}>
@@ -377,17 +315,9 @@ const FarmerDetails = () => {
                         {[...Array(surveyCount).keys()].map(num => (
                             <MenuItem key={num + 1} value={`${num + 1}`}>Survey {num + 1}</MenuItem>
                         ))}
-
-                        {/* Updated Add Survey Trigger */}
                         {role === "Remote Sensing Manager" && (
                             <Box sx={{ p: 1, borderTop: '1px solid #eee' }}>
-                                <Button
-                                    fullWidth
-                                    variant="contained"
-                                    size="small"
-                                    startIcon={<AddIcon />}
-                                    onClick={handleOpenAddSurvey}
-                                >
+                                <Button fullWidth variant="contained" size="small" startIcon={<AddIcon />} onClick={handleOpenAddSurvey}>
                                     Add Survey
                                 </Button>
                             </Box>
@@ -407,29 +337,28 @@ const FarmerDetails = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, bgcolor: '#e3f2fd', px: 2, py: 0.5, borderRadius: 2, border: '1px solid #2196f3' }}>
                         <Typography variant="body2" fontWeight="bold" color="primary.main">{selectedItems.length} Selected</Typography>
                         <Tooltip title="Bulk action advisory">
-                            <IconButton
-                                color="primary"
-                                size="small"
-                                onClick={handleBulkActionAdvisory}
-                            >
+                            <IconButton color="primary" size="small" onClick={handleBulkActionAdvisory}>
                                 <CampaignIcon />
                             </IconButton>
                         </Tooltip>
-                        <Button size="small" onClick={() => setSelectedItems([])}>Clear</Button>
+                        <Button
+                            size="small"
+                            onClick={() => {
+                                setSelectedItems([]);
+                                setSelectedFarmerMap({});
+                            }}
+                        >
+                            Clear
+                        </Button>
                     </Box>
                 )}
             </Box>
 
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
             <Paper sx={{ boxShadow: 4, borderRadius: '8px', overflow: 'hidden' }}>
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#fff', borderBottom: '1px solid #eee' }}>
                     <Typography variant="h6" fontWeight="600" color="primary">Farmers Survey Wise ({totalRecords})</Typography>
-
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         {isFiltering && <Button size="small" color="error" startIcon={<ClearIcon />} onClick={handleClearFilters}>Clear Search</Button>}
                         <Button
@@ -448,10 +377,8 @@ const FarmerDetails = () => {
                                 <Typography variant="subtitle2" sx={{ px: 1, fontWeight: 'bold' }}>Display Columns</Typography>
                                 <Divider sx={{ my: 1 }} />
                                 {columns.map(col => {
-                                    // Logic to disable checkboxes in menu if survey is 'all'
                                     const isRestricted = ['prescription', 'advisory'].includes(col.id);
                                     const forceDisabled = isRestricted && filters.survey === 'all';
-
                                     return (
                                         <MenuItem key={col.id} sx={{ py: 0 }} disabled={forceDisabled}>
                                             <FormControlLabel
@@ -473,8 +400,7 @@ const FarmerDetails = () => {
                                 <TableCell padding="checkbox" sx={{ bgcolor: '#f8f9fa' }}>
                                     <Checkbox indeterminate={isSomeSelectedOnPage} checked={isAllSelectedOnPage} onChange={handleSelectAll} size="small" />
                                 </TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f8f9fa' }} align="center">Actions</TableCell>
-
+                                {/* 2. REMOVED ACTIONS HEADER */}
                                 {displayColumns.map(col => (
                                     <TableCell key={col.id} sx={{ fontWeight: 'bold', bgcolor: '#f8f9fa' }} align={['prescription', 'advisory'].includes(col.id) ? 'center' : 'left'}>
                                         {col.label}
@@ -485,10 +411,10 @@ const FarmerDetails = () => {
                             {showFilters && (
                                 <TableRow>
                                     <TableCell sx={{ bgcolor: '#fcfcfc' }} />
-                                    <TableCell align="center" sx={{ bgcolor: '#fcfcfc', color: '#999', fontSize: '0.7rem' }}>FILTER</TableCell>
+                                    {/* 3. REMOVED FILTER LABEL PLACEHOLDER */}
                                     {displayColumns.map(col => (
                                         <TableCell key={col.id} sx={{ bgcolor: '#fcfcfc', py: 1 }}>
-                                            {['_id', 'createdAt', 'lat', 'long', 'prescription', 'advisory'].includes(col.id) ? null : (
+                                            {['createdAt', 'lat', 'long', 'prescription', 'advisory'].includes(col.id) ? null : (
                                                 <TextField
                                                     fullWidth size="small" variant="outlined"
                                                     placeholder="Search..."
@@ -521,12 +447,10 @@ const FarmerDetails = () => {
                                 return (
                                     <TableRow key={farmer._id} hover selected={isItemSelected}>
                                         <TableCell padding="checkbox">
-                                            <Checkbox checked={isItemSelected} onChange={() => handleSelectItem(farmer._id)} size="small" />
+                                            <Checkbox checked={isItemSelected} onChange={() => handleSelectItem(farmer)} size="small" />
                                         </TableCell>
-                                        <TableCell align="center"><IconButton size="small" color="primary"><EditIcon fontSize="inherit" /></IconButton></TableCell>
-
+                                        {/* 4. REMOVED ACTION BUTTON CELL */}
                                         {displayColumns.map(col => {
-                                            if (col.id === '_id') return <TableCell key={col.id} sx={{ fontSize: '0.7rem' }}>{farmer._id.slice(-6).toUpperCase()}</TableCell>;
                                             if (col.id === 'name') return <TableCell key={col.id} sx={{ fontWeight: 600 }}>{farmer.name}</TableCell>;
                                             if (col.id === 'state') return <TableCell key={col.id}><Chip label={farmer.state} size="small" variant="outlined" /></TableCell>;
                                             if (col.id === 'prescription') return (
@@ -536,29 +460,12 @@ const FarmerDetails = () => {
                                             );
                                             if (col.id === "advisory") {
                                                 const hasAdvisory = !!farmer.advisory;
-
                                                 return (
                                                     <TableCell key={col.id} align="center">
                                                         {hasAdvisory ? (
-                                                            <Tooltip title="View Advisory">
-                                                                <IconButton
-                                                                    color="success"
-                                                                    size="small"
-                                                                    onClick={() => handlePreviewAdvisory(farmer)}
-                                                                >
-                                                                    <ViewIcon fontSize="small" />
-                                                                </IconButton>
-                                                            </Tooltip>
+                                                            <Tooltip title="View Advisory"><IconButton color="success" size="small" onClick={() => handlePreviewAdvisory(farmer)}><ViewIcon fontSize="small" /></IconButton></Tooltip>
                                                         ) : (
-                                                            <Tooltip title="Upload Advisory">
-                                                                <IconButton
-                                                                    color="info"
-                                                                    size="small"
-                                                                    onClick={() => handleUploadAdvisory(farmer._id)}
-                                                                >
-                                                                    <AdvisoryIcon fontSize="small" />
-                                                                </IconButton>
-                                                            </Tooltip>
+                                                            <Tooltip title="Upload Advisory"><IconButton color="info" size="small" onClick={() => handleUploadAdvisory(farmer._id)}><AdvisoryIcon fontSize="small" /></IconButton></Tooltip>
                                                         )}
                                                     </TableCell>
                                                 );
@@ -587,9 +494,8 @@ const FarmerDetails = () => {
                 />
             </Paper>
 
-
+            {/* DIALOGS */}
             <Dialog open={uploadModalOpen} onClose={() => !uploading && setUploadModalOpen(false)} maxWidth="sm" fullWidth>
-
                 <DialogTitle sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}><BulkUploadIcon color="primary" /> Bulk Farmer Upload</DialogTitle>
                 <DialogContent dividers>
                     <Box
@@ -609,78 +515,32 @@ const FarmerDetails = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* ADD SURVEY DIALOG */}
-            <Dialog
-                open={addSurveyOpen}
-                onClose={handleCloseAddSurvey}
-                maxWidth="xs"
-                fullWidth
-            >
+            <Dialog open={addSurveyOpen} onClose={handleCloseAddSurvey} maxWidth="xs" fullWidth>
                 <DialogTitle sx={{ fontWeight: 'bold' }}>Create New Survey</DialogTitle>
                 <DialogContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-                        <TextField
-                            label="New Survey Number"
-                            value={surveyCount + 1}
-                            disabled
-                            fullWidth
-                            helperText="This number is automatically assigned"
-                        />
-                        {/* <TextField
-                            label="Survey Date"
-                            type="date"
-                            value={surveyData}
-                            onChange={(e) => setSurveyData(e.target.value)}
-                            fullWidth
-                            InputLabelProps={{ shrink: true }}
-                        /> */}
+                        <TextField label="New Survey Number" value={surveyCount + 1} disabled fullWidth helperText="This number is automatically assigned" />
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>
                     <Button onClick={handleCloseAddSurvey} color="inherit">Cancel</Button>
-                    <Button
-                        onClick={handleAddSurveySubmit}
-                        variant="contained"
-                    // disabled={!surveyData.trim()}
-                    >
-                        Confirm & Submit
-                    </Button>
+                    <Button onClick={handleAddSurveySubmit} variant="contained">Confirm & Submit</Button>
                 </DialogActions>
             </Dialog>
 
-            <Dialog
-                open={errorDialogOpen}
-                onClose={() => setErrorDialogOpen(false)}
-                maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle>
-                    CSV Validation Errors
-                </DialogTitle>
-
+            <Dialog open={errorDialogOpen} onClose={() => setErrorDialogOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>CSV Validation Errors</DialogTitle>
                 <DialogContent dividers>
                     {csvErrors.slice(0, 4).map((item) => (
                         <Alert severity="error" sx={{ mb: 1 }} key={item.row}>
                             <strong>Row {item.row}</strong>: {item.errors.join(", ")}
                         </Alert>
                     ))}
-
-                    {csvErrors.length > 4 && (
-                        <Typography sx={{ mt: 2 }}>
-                            ...and {csvErrors.length - 4} more errors.
-                        </Typography>
-                    )}
+                    {csvErrors.length > 4 && <Typography sx={{ mt: 2 }}>...and {csvErrors.length - 4} more errors.</Typography>}
                 </DialogContent>
-
-                <DialogActions>
-                    <Button onClick={() => setErrorDialogOpen(false)}>
-                        Close
-                    </Button>
-                </DialogActions>
+                <DialogActions><Button onClick={() => setErrorDialogOpen(false)}>Close</Button></DialogActions>
             </Dialog>
 
-
-            {/* ADVISORY COMPONENT */}
             <AdvisoryGenerator
                 open={advisoryOpen}
                 onClose={() => setAdvisoryOpen(false)}
@@ -689,14 +549,15 @@ const FarmerDetails = () => {
                 projectId={_id}
                 surveyNumber={filters.survey}
             />
+
             <AdvisoryGenerator
                 open={bulkAdvisoryOpen}
                 onClose={() => setBulkAdvisoryOpen(false)}
                 farmers={selectedBulkFarmers}
-                farmerName={selectedFarmer?.name}
                 projectId={_id}
                 surveyNumber={filters.survey}
                 isBulk={true}
+                onSuccess={handleBulkAdvisorySuccess}
             />
         </Container>
     );

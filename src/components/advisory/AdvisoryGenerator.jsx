@@ -35,7 +35,9 @@ const AdvisoryGenerator = ({
     farmerName = "All Farmers",
     projectId,
     surveyNumber,
-    isBulk = false, }) => {
+    isBulk = false,
+    onSuccess,
+}) => {
     const [form, setForm] = useState({
         observation: "हमारे सर्वेक्षण के अनुसार, आपकी फ़सल में पीला रतुआ के लक्षण दिखाई दे रहे हैं, जिसे पीले रंग से दर्शाया गया है।",
         solution: "कृपया अपनी फ़सल के उपचार के लिए प्रोपिकोनाज़ोल 25% EC 200 ml/Acre 150 लीटर पानी के साथ मिलाकर स्प्रे विधि से छिड़काव करें।",
@@ -137,11 +139,13 @@ const AdvisoryGenerator = ({
                 }
             );
 
-            console.log("Advisory upload response:", response.data);
-
-            alert(response.data.message || "Advisory uploaded successfully");
-
-            onClose();
+            if (response.data.success) {
+                onSuccess?.();
+                alert("Bulk advisory saved successfully!");
+                onClose();
+            } else {
+                alert(response.data.message);
+            }
         } catch (err) {
             console.error(err);
 
